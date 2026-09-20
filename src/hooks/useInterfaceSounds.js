@@ -4,6 +4,7 @@ import levelCompleteSound from '../assets/sounds/level-complete.mp3'
 import clickSound from '../assets/sounds/click.mp3'
 import correctSound from '../assets/sounds/correct.mp3'
 import missSound from '../assets/sounds/miss.mp3'
+import { getBufferedAudio } from '../utils/audioPool.js'
 
 const LEVEL_COMPLETE_EVENT = 'playkids:level-complete'
 const CORRECT_EVENT = 'playkids:correct'
@@ -29,54 +30,32 @@ function useInterfaceSounds(muted) {
   }, [muted])
 
   useEffect(() => {
-    const hoverAudio = new Audio(hoverSound)
-    const levelCompleteAudio = new Audio(levelCompleteSound)
-    const clickAudio = new Audio(clickSound)
-    const correctAudio = new Audio(correctSound)
-    const missAudio = new Audio(missSound)
-    hoverAudio.preload = 'auto'
-    hoverAudio.volume = 0.42
-    levelCompleteAudio.preload = 'auto'
-    levelCompleteAudio.volume = 0.72
-    clickAudio.preload = 'auto'
-    clickAudio.volume = 0.38
-    correctAudio.preload = 'auto'
-    correctAudio.volume = 0.46
-    missAudio.preload = 'auto'
-    missAudio.volume = 0.43
-
-    const audios = [hoverAudio, levelCompleteAudio, clickAudio, correctAudio, missAudio]
-    audios.forEach((audio) => audio.load())
-
-    const play = (audio) => {
+    const play = (source, volume) => {
       if (mutedRef.current) return
+      const audio = getBufferedAudio(source)
+      if (!audio) return
+
+      audio.volume = volume
       audio.pause()
-      if (audio.readyState > HTMLMediaElement.HAVE_NOTHING) {
-        audio.currentTime = 0
-      }
+      if (audio.readyState > HTMLMediaElement.HAVE_NOTHING) audio.currentTime = 0
       void audio.play().catch(() => {
-        // Algunos navegadores móviles ignoran `preload`. Al primer intento,
-        // cargamos el archivo sin tratar de mover el cursor antes de tiempo.
-        audio.load()
-        void audio.play().catch((error) => {
-          console.warn('No se pudo reproducir un sonido de la interfaz.', error)
-        })
+        console.warn('No se pudo reproducir un sonido de la interfaz.')
       })
     }
 
     const handlePointerOver = (event) => {
       const button = event.target.closest?.('button')
       if (!button || button.disabled || button.contains(event.relatedTarget)) return
-      play(hoverAudio)
+      play(hoverSound, 0.42)
     }
 
-    const handleLevelComplete = () => play(levelCompleteAudio)
-    const handleCorrect = () => play(correctAudio)
-    const handleMiss = () => play(missAudio)
+    const handleLevelComplete = () => play(levelCompleteSound, 0.72)
+    const handleCorrect = () => play(correctSound, 0.46)
+    const handleMiss = () => play(missSound, 0.43)
     const handleClick = (event) => {
       const button = event.target.closest?.('button')
       if (!button || button.disabled) return
-      play(clickAudio)
+      play(clickSound, 0.38)
     }
 
     document.addEventListener('pointerover', handlePointerOver)
@@ -91,7 +70,6 @@ function useInterfaceSounds(muted) {
       window.removeEventListener(LEVEL_COMPLETE_EVENT, handleLevelComplete)
       window.removeEventListener(CORRECT_EVENT, handleCorrect)
       window.removeEventListener(MISS_EVENT, handleMiss)
-      audios.forEach((audio) => audio.pause())
     }
   }, [])
 }

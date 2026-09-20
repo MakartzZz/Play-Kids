@@ -2,8 +2,8 @@ import { useState } from 'react'
 import './App.css'
 import GameLobby from './components/GameLobby.jsx'
 import GamePlaceholder from './components/GamePlaceholder.jsx'
-import GameTutorial from './components/GameTutorial.jsx'
 import IntroScreen from './components/IntroScreen.jsx'
+import ResourceLoadingScreen from './components/ResourceLoadingScreen.jsx'
 import ClassificationGame from './features/classification/ClassificationGame.jsx'
 import DirectionsGame from './features/directions/DirectionsGame.jsx'
 import EmotionsGame from './features/emotions/EmotionsGame.jsx'
@@ -40,7 +40,7 @@ function App() {
 
   const openGame = (game) => {
     setSelectedGame(game)
-    setScreen('tutorial')
+    setScreen('game-loading')
   }
 
   const returnToLobby = () => {
@@ -52,15 +52,11 @@ function App() {
     return <IntroScreen onComplete={() => setScreen('lobby')} />
   }
 
-  if (screen === 'tutorial' && selectedGame) {
+  if (screen === 'game-loading' && selectedGame) {
     return (
-      <GameTutorial
+      <ResourceLoadingScreen
         game={selectedGame}
-        muted={muted}
-        onBack={returnToLobby}
-        onNarrationChange={setIsGuideNarrationPlaying}
-        onStart={() => setScreen('game')}
-        onToggleSound={() => setMuted((current) => !current)}
+        onComplete={() => setScreen('game')}
       />
     )
   }

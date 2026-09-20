@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { getBufferedAudio } from '../utils/audioPool.js'
 
 function useLobbyNarration({ cueId, source, shouldPlay, volume = 0.9, rememberPlayed = true }) {
   const [isPlaying, setIsPlaying] = useState(false)
@@ -10,11 +11,9 @@ function useLobbyNarration({ cueId, source, shouldPlay, volume = 0.9, rememberPl
       return undefined
     }
 
-    const audio = new Audio(source)
+    const audio = getBufferedAudio(source)
     let active = true
-    audio.preload = 'auto'
     audio.volume = volume
-    audio.load()
 
     const removeUnlockListeners = () => {
       window.removeEventListener('pointerdown', retryAfterInteraction, true)

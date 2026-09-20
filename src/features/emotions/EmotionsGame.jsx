@@ -4,6 +4,7 @@ import LevelConfetti from '../../components/LevelConfetti.jsx'
 import { HomeIcon, RestartIcon, SoundIcon } from '../../components/UiIcons.jsx'
 import { playCorrect, playLevelComplete, playMiss } from '../../hooks/useInterfaceSounds.js'
 import { isPageActive } from '../../utils/pageActivity.js'
+import { getBufferedAudio } from '../../utils/audioPool.js'
 import happyFace from '../../assets/emotions/happy.png'
 import sadFace from '../../assets/emotions/sad.png'
 import angryFace from '../../assets/emotions/angry.png'
@@ -111,13 +112,11 @@ function EmotionsGame({ game, muted, onToggleSound, onBack }) {
       setIsSpeaking(false)
     }
     const createNarrationAudio = (source) => {
-      const audio = new Audio(source)
-      audio.preload = 'auto'
+      const audio = getBufferedAudio(source)
       audio.volume = 0.9
       audio.addEventListener('play', handlePlay)
       audio.addEventListener('ended', handleFinish)
       audio.addEventListener('error', handleFinish)
-      audio.load()
       return audio
     }
     const storyAudios = LEVELS.map(({ audio: source }) => createNarrationAudio(source))
@@ -174,7 +173,6 @@ function EmotionsGame({ game, muted, onToggleSound, onBack }) {
     void audio.play().catch(() => {
       activeNarrationAudioRef.current = null
       setIsSpeaking(false)
-      audio.load()
       console.warn('No se pudo reproducir una narración de emociones.')
     })
   }, [muted, stopNarration])

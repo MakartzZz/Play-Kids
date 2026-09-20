@@ -4,6 +4,7 @@ import LevelConfetti from '../../components/LevelConfetti.jsx'
 import { HintIcon, HomeIcon, RestartIcon, SoundIcon } from '../../components/UiIcons.jsx'
 import { playCorrect, playLevelComplete, playMiss } from '../../hooks/useInterfaceSounds.js'
 import { isPageActive } from '../../utils/pageActivity.js'
+import { getBufferedAudio } from '../../utils/audioPool.js'
 import patternsErrorSound from '../../assets/sounds/patterns/feedback/error.mp3'
 import patternsHintSound from '../../assets/sounds/patterns/hints/general.mp3'
 import circleSound1 from '../../assets/sounds/patterns/shapes/circle-1.mp3'
@@ -120,10 +121,8 @@ function PatternsGame({ game, muted, onToggleSound, onBack }) {
 
   useEffect(() => {
     const createNarrationAudio = (source) => {
-      const audio = new Audio(source)
-      audio.preload = 'auto'
+      const audio = getBufferedAudio(source)
       audio.volume = 0.9
-      audio.load()
       return audio
     }
     const hintAudio = createNarrationAudio(patternsHintSound)
@@ -194,7 +193,6 @@ function PatternsGame({ game, muted, onToggleSound, onBack }) {
     cancelClipRef.current = cancel
     setIsSpeaking(true)
     void audio.play().catch(() => {
-      audio.load()
       finish(false)
     })
   }), [])

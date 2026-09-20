@@ -133,6 +133,16 @@
   font-size: clamp(1.1rem, 4vw, 1.45rem);
 }
 
+.resource-loader__game-icon {
+  width: clamp(92px, 23vw, 138px);
+  aspect-ratio: 1;
+  padding: 8px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, .92);
+  box-shadow: 0 12px 28px rgba(47, 91, 143, .16);
+  object-fit: contain;
+}
+
 .intro-screen__loader small {
   color: #6882a5;
   font-size: .8rem;

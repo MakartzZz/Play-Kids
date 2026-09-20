@@ -3,6 +3,7 @@ import LobbyMascot from '../../components/LobbyMascot.jsx'
 import LevelConfetti from '../../components/LevelConfetti.jsx'
 import { HintIcon, HomeIcon, RestartIcon, SoundIcon } from '../../components/UiIcons.jsx'
 import { isPageActive } from '../../utils/pageActivity.js'
+import { getBufferedAudio, rewindBufferedAudio } from '../../utils/audioPool.js'
 import rabbitSprite from '../../assets/directions/rabbit.png'
 import rabbitBlinkSprite from '../../assets/directions/rabbit-blink.png'
 import burrowSprite from '../../assets/directions/burrow.png'
@@ -186,8 +187,7 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
 
   useEffect(() => {
     const sounds = [jumpSoundOne, jumpSoundTwo].map((source) => {
-      const audio = new Audio(source)
-      audio.preload = 'auto'
+      const audio = getBufferedAudio(source)
       audio.volume = 0.62
       return audio
     })
@@ -204,13 +204,11 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
       setActiveHintDirection(null)
     }
     const createNarrationAudio = (source) => {
-      const audio = new Audio(source)
-      audio.preload = 'auto'
+      const audio = getBufferedAudio(source)
       audio.volume = 0.9
       audio.addEventListener('play', handleHintPlay)
       audio.addEventListener('ended', handleHintFinish)
       audio.addEventListener('error', handleHintFinish)
-      audio.load()
       return audio
     }
     const hintSounds = Object.fromEntries(
@@ -284,7 +282,6 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
       activeNarrationAudioRef.current = null
       setIsSpeaking(false)
       setActiveHintDirection(null)
-      audio.load()
       console.warn('No se pudo reproducir la pista de direcciones.')
     })
   }, [completed, levelSolved, muted, nextPathDirection])
@@ -303,7 +300,6 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
     void audio.play().catch(() => {
       activeNarrationAudioRef.current = null
       setIsSpeaking(false)
-      audio.load()
       console.warn('No se pudo reproducir el nombre de la dirección.')
     })
   }, [muted])
@@ -326,12 +322,10 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
       activeNarrationAudioRef.current.pause()
     }
     setActiveHintDirection(null)
-    audio.pause()
-    audio.load()
+    rewindBufferedAudio(audio)
     void audio.play().catch(() => {
       activeNarrationAudioRef.current = null
       setIsSpeaking(false)
-      audio.load()
       console.warn('No se pudo reproducir el mensaje de movimiento inválido.')
     })
   }, [muted])

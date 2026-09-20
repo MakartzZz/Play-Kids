@@ -4,6 +4,7 @@ import LevelConfetti from '../../components/LevelConfetti.jsx'
 import { HintIcon, HomeIcon, RestartIcon, SoundIcon } from '../../components/UiIcons.jsx'
 import { playCorrect, playLevelComplete, playMiss } from '../../hooks/useInterfaceSounds.js'
 import { isPageActive } from '../../utils/pageActivity.js'
+import { getBufferedAudio } from '../../utils/audioPool.js'
 import appleGroupSound from '../../assets/sounds/numbers/groups/apple.mp3'
 import backpackGroupSound from '../../assets/sounds/numbers/groups/backpack.mp3'
 import ballGroupSound from '../../assets/sounds/numbers/groups/ball.mp3'
@@ -140,13 +141,11 @@ function NumbersGame({ game, muted, onToggleSound, onBack }) {
       setIsSpeaking(false)
     }
     const createNarrationAudio = (source) => {
-      const audio = new Audio(source)
-      audio.preload = 'auto'
+      const audio = getBufferedAudio(source)
       audio.volume = 0.9
       audio.addEventListener('play', handlePlay)
       audio.addEventListener('ended', handleFinish)
       audio.addEventListener('error', handleFinish)
-      audio.load()
       return audio
     }
 
@@ -213,7 +212,6 @@ function NumbersGame({ game, muted, onToggleSound, onBack }) {
     void audio.play().catch(() => {
       activeNarrationAudioRef.current = null
       setIsSpeaking(false)
-      audio.load()
       console.warn('No se pudo reproducir una narración de números.')
     })
   }, [muted])

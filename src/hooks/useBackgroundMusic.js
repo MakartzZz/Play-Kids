@@ -1,14 +1,13 @@
 import { useEffect, useRef } from 'react'
+import { getBufferedAudio } from '../utils/audioPool.js'
 
 function useBackgroundMusic(source, shouldPlay, volume = 0.18) {
   const audioRef = useRef(null)
   const shouldPlayRef = useRef(shouldPlay)
 
   useEffect(() => {
-    const audio = new Audio(source)
+    const audio = getBufferedAudio(source)
     audio.loop = true
-    audio.preload = 'auto'
-    audio.load()
     audioRef.current = audio
 
     return () => {

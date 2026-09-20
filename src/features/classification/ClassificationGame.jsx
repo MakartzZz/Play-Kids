@@ -4,6 +4,7 @@ import LevelConfetti from '../../components/LevelConfetti.jsx'
 import { HintIcon, HomeIcon, RestartIcon, SoundIcon } from '../../components/UiIcons.jsx'
 import { playCorrect, playLevelComplete, playMiss } from '../../hooks/useInterfaceSounds.js'
 import { isPageActive } from '../../utils/pageActivity.js'
+import { getBufferedAudio } from '../../utils/audioPool.js'
 import blueBoxSound from '../../assets/sounds/classification/boxes/blue.mp3'
 import brownBoxSound from '../../assets/sounds/classification/boxes/brown.mp3'
 import greenBoxSound from '../../assets/sounds/classification/boxes/green.mp3'
@@ -175,13 +176,11 @@ function ClassificationGame({ game, muted, onToggleSound, onBack }) {
       setActiveBoxColor(null)
     }
     const createNarrationAudio = (source) => {
-      const audio = new Audio(source)
-      audio.preload = 'auto'
+      const audio = getBufferedAudio(source)
       audio.volume = 0.9
       audio.addEventListener('play', handlePlay)
       audio.addEventListener('ended', handleFinish)
       audio.addEventListener('error', handleFinish)
-      audio.load()
       return audio
     }
 
@@ -248,7 +247,6 @@ function ClassificationGame({ game, muted, onToggleSound, onBack }) {
       activeNarrationRef.current = null
       setIsSpeaking(false)
       setActiveBoxColor(null)
-      audio.load()
       console.warn('No se pudo reproducir una narración de clasificación.')
     })
   }, [muted])
@@ -391,7 +389,7 @@ function ClassificationGame({ game, muted, onToggleSound, onBack }) {
       startX: event.clientX,
       startY: event.clientY,
       lastX: event.clientX,
-      lastTime: performance.now(),
+      lastTime: event.timeStamp,
       x: 0,
       y: 0,
       rotation: 0,
@@ -404,7 +402,7 @@ function ClassificationGame({ game, muted, onToggleSound, onBack }) {
     setDrag((current) => {
       if (!current || current.id !== objectId || current.pointerId !== event.pointerId) return current
 
-      const now = performance.now()
+      const now = event.timeStamp
       const x = event.clientX - current.startX
       const y = event.clientY - current.startY
       const elapsed = Math.max(now - current.lastTime, 8)

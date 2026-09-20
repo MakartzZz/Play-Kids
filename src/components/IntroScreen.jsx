@@ -2,54 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { introMedia } from '../config/media.js'
 import tapHandPressed from '../assets/ui/tap-hand-pressed.png'
 import tapHandRaised from '../assets/ui/tap-hand-raised.png'
+import { getBufferedAudio } from '../utils/audioPool.js'
+import { getLobbyResources, preloadResources } from '../utils/resourcePreloader.js'
 import BrandLogo from './BrandLogo.jsx'
 import IntroMascot from './IntroMascot.jsx'
 
-const graphicModules = import.meta.glob([
-  '../assets/**/*.{png,jpg,jpeg,webp,svg}',
-  '!../assets/hero.png',
-  '!../assets/react.svg',
-  '!../assets/vite.svg',
-  '!../assets/tutorials/classification-tutorial.png',
-], {
-  eager: true,
-  query: '?url',
-  import: 'default',
-})
-const GRAPHIC_SOURCES = [...new Set(Object.values(graphicModules))]
-
-const preloadGraphics = (onProgress) => {
-  let completed = 0
-
-  if (GRAPHIC_SOURCES.length === 0) {
-    onProgress(100)
-    return Promise.resolve()
-  }
-
-  return Promise.all(GRAPHIC_SOURCES.map((source) => new Promise((resolve) => {
-    const image = new Image()
-    let finished = false
-
-    const finish = async () => {
-      if (finished) return
-      finished = true
-
-      try {
-        await image.decode()
-      } catch {
-        // A failed image must not leave the app trapped on the loading screen.
-      }
-
-      completed += 1
-      onProgress(Math.round((completed / GRAPHIC_SOURCES.length) * 100))
-      resolve()
-    }
-
-    image.addEventListener('load', finish, { once: true })
-    image.addEventListener('error', finish, { once: true })
-    image.src = source
-  })))
-}
+const LOBBY_RESOURCES = getLobbyResources()
 
 const isAppleTouchDevice = () => {
   const userAgent = navigator.userAgent || ''
@@ -90,7 +48,7 @@ function IntroScreen({ onComplete }) {
       }
 
       if (introMedia.soundSource) {
-        const audio = audioRef.current ?? new Audio(introMedia.soundSource)
+        const audio = audioRef.current ?? getBufferedAudio(introMedia.soundSource)
         audioRef.current = audio
         audio.preload = 'auto'
         audio.volume = 0.35
@@ -118,7 +76,7 @@ function IntroScreen({ onComplete }) {
     }
 
     const initialize = async () => {
-      await preloadGraphics((progress) => {
+      await preloadResources(LOBBY_RESOURCES, (progress) => {
         if (!cancelled) setLoadingProgress(progress)
       })
       if (cancelled) return
