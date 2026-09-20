@@ -70,10 +70,10 @@ function LobbyMascot({ talking = false, className = '' }) {
       className={`${className} lobby-mascot ${isBlinking ? 'is-blinking' : ''} ${talking ? 'is-talking' : ''} ${speechFrame === 0 ? 'has-closed-mouth' : ''} ${speechFrame === 2 ? 'has-wide-mouth' : ''}`}
       aria-hidden="true"
     >
-      <img className="lobby-mascot__frame lobby-mascot__frame--awake" src={lionAwake} alt="" />
-      <img className="lobby-mascot__frame lobby-mascot__frame--blink" src={lionBlink} alt="" />
-      <img className="lobby-mascot__frame lobby-mascot__frame--talk-small" src={lionTalkSmall} alt="" />
-      <img className="lobby-mascot__frame lobby-mascot__frame--talk-wide" src={lionTalkWide} alt="" />
+      <img className="lobby-mascot__frame lobby-mascot__frame--base" src={lionAwake} alt="" />
+      <img className="lobby-mascot__frame lobby-mascot__frame--eyes-closed" src={lionBlink} alt="" />
+      <img className="lobby-mascot__frame lobby-mascot__frame--mouth-small" src={lionTalkSmall} alt="" />
+      <img className="lobby-mascot__frame lobby-mascot__frame--mouth-wide" src={lionTalkWide} alt="" />
     </span>
   )
 }

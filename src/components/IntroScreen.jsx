@@ -1,7 +1,55 @@
 import { useEffect, useRef, useState } from 'react'
 import { introMedia } from '../config/media.js'
+import tapHandPressed from '../assets/ui/tap-hand-pressed.png'
+import tapHandRaised from '../assets/ui/tap-hand-raised.png'
 import BrandLogo from './BrandLogo.jsx'
 import IntroMascot from './IntroMascot.jsx'
+
+const graphicModules = import.meta.glob([
+  '../assets/**/*.{png,jpg,jpeg,webp,svg}',
+  '!../assets/hero.png',
+  '!../assets/react.svg',
+  '!../assets/vite.svg',
+  '!../assets/tutorials/classification-tutorial.png',
+], {
+  eager: true,
+  query: '?url',
+  import: 'default',
+})
+const GRAPHIC_SOURCES = [...new Set(Object.values(graphicModules))]
+
+const preloadGraphics = (onProgress) => {
+  let completed = 0
+
+  if (GRAPHIC_SOURCES.length === 0) {
+    onProgress(100)
+    return Promise.resolve()
+  }
+
+  return Promise.all(GRAPHIC_SOURCES.map((source) => new Promise((resolve) => {
+    const image = new Image()
+    let finished = false
+
+    const finish = async () => {
+      if (finished) return
+      finished = true
+
+      try {
+        await image.decode()
+      } catch {
+        // A failed image must not leave the app trapped on the loading screen.
+      }
+
+      completed += 1
+      onProgress(Math.round((completed / GRAPHIC_SOURCES.length) * 100))
+      resolve()
+    }
+
+    image.addEventListener('load', finish, { once: true })
+    image.addEventListener('error', finish, { once: true })
+    image.src = source
+  })))
+}
 
 const isAppleTouchDevice = () => {
   const userAgent = navigator.userAgent || ''
@@ -11,7 +59,8 @@ const isAppleTouchDevice = () => {
 }
 
 function IntroScreen({ onComplete }) {
-  const [phase, setPhase] = useState('waiting')
+  const [phase, setPhase] = useState('loading')
+  const [loadingProgress, setLoadingProgress] = useState(0)
   const [requiresInteraction, setRequiresInteraction] = useState(false)
   const [ripple, setRipple] = useState(null)
   const audioRef = useRef(null)
@@ -20,6 +69,8 @@ function IntroScreen({ onComplete }) {
   const hasStartedRef = useRef(false)
 
   useEffect(() => {
+    let cancelled = false
+
     const clearTimers = () => {
       timersRef.current.forEach((timer) => window.clearTimeout(timer))
       timersRef.current = []
@@ -66,10 +117,21 @@ function IntroScreen({ onComplete }) {
       timersRef.current.push(window.setTimeout(finish, duration))
     }
 
+    const initialize = async () => {
+      await preloadGraphics((progress) => {
+        if (!cancelled) setLoadingProgress(progress)
+      })
+      if (cancelled) return
+
+      setPhase('waiting')
+      void begin()
+    }
+
     startRef.current = begin
-    void begin()
+    void initialize()
 
     return () => {
+      cancelled = true
       clearTimers()
       hasStartedRef.current = false
       if (audioRef.current) {
@@ -110,11 +172,24 @@ function IntroScreen({ onComplete }) {
         <p>¡Juega, descubre y aprende!</p>
       </section>
 
+      {phase === 'loading' && (
+        <div className="intro-screen__loader" role="status" aria-live="polite">
+          <span className="intro-screen__loader-dots" aria-hidden="true"><i /><i /><i /></span>
+          <strong>Cargando aventuras...</strong>
+          <span className="intro-screen__progress" aria-hidden="true">
+            <i style={{ width: `${loadingProgress}%` }} />
+          </span>
+          <small>{loadingProgress}%</small>
+        </div>
+      )}
+
       {requiresInteraction && (
         <div className="intro-screen__permission">
-          <span className="intro-screen__tap-icon" aria-hidden="true">☝️</span>
-          <strong>Toca para comenzar</strong>
-          <small>Así podremos activar los sonidos del juego</small>
+          <span className="intro-screen__tap-icon" aria-hidden="true">
+            <img className="intro-screen__tap-frame intro-screen__tap-frame--raised" src={tapHandRaised} alt="" />
+            <img className="intro-screen__tap-frame intro-screen__tap-frame--pressed" src={tapHandPressed} alt="" />
+          </span>
+          <strong>Presiona para continuar</strong>
         </div>
       )}
 

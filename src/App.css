@@ -116,6 +116,72 @@
   animation: intro-copy-in 440ms ease-out forwards;
 }
 
+.intro-screen__loader {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.intro-screen__loader strong {
+  color: #244c83;
+  font-size: clamp(1.1rem, 4vw, 1.45rem);
+}
+
+.intro-screen__loader small {
+  color: #6882a5;
+  font-size: .8rem;
+  font-weight: 850;
+}
+
+.intro-screen__loader-dots {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 34px;
+}
+
+.intro-screen__loader-dots i {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ff8a66;
+  animation: intro-loader-bounce 900ms ease-in-out infinite;
+}
+
+.intro-screen__loader-dots i:nth-child(2) {
+  background: #ffd33f;
+  animation-delay: 120ms;
+}
+
+.intro-screen__loader-dots i:nth-child(3) {
+  background: #69cb62;
+  animation-delay: 240ms;
+}
+
+.intro-screen__progress {
+  width: clamp(190px, 54vw, 310px);
+  height: 12px;
+  overflow: hidden;
+  border: 3px solid rgba(67, 116, 176, .13);
+  border-radius: 999px;
+  background: rgba(201, 222, 245, .48);
+  box-shadow: inset 0 2px 4px rgba(47, 91, 143, .1);
+}
+
+.intro-screen__progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #62c5f2, #8170df);
+  transition: width 160ms ease-out;
+}
+
 .intro-screen__permission {
   position: absolute;
   z-index: 5;
@@ -141,8 +207,29 @@
 }
 
 .intro-screen__tap-icon {
-  font-size: 2.6rem;
+  position: relative;
+  display: block;
+  width: clamp(94px, 24vw, 132px);
+  aspect-ratio: 1;
   animation: tap-hint 1.6s ease-in-out infinite;
+}
+
+.intro-screen__tap-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 8px rgba(60, 72, 131, .16));
+}
+
+.intro-screen__tap-frame--raised {
+  animation: tap-frame-raised 1.6s steps(1, end) infinite;
+}
+
+.intro-screen__tap-frame--pressed {
+  opacity: 0;
+  animation: tap-frame-pressed 1.6s steps(1, end) infinite;
 }
 
 .intro-screen.requires-interaction .intro-screen__content {
@@ -354,42 +441,37 @@
   transition: opacity 55ms linear;
 }
 
-.lobby-mascot__frame--blink,
-.lobby-mascot__frame--talk-small,
-.lobby-mascot__frame--talk-wide {
+.lobby-mascot__frame--base {
+  z-index: 1;
+}
+
+.lobby-mascot__frame--eyes-closed,
+.lobby-mascot__frame--mouth-small,
+.lobby-mascot__frame--mouth-wide {
+  z-index: 2;
   opacity: 0;
 }
 
-.lobby-mascot.is-blinking .lobby-mascot__frame--awake {
-  opacity: 0;
+.lobby-mascot__frame--eyes-closed {
+  -webkit-mask-image: radial-gradient(ellipse 34% 15% at 50% 52%, #000 84%, transparent 100%);
+  mask-image: radial-gradient(ellipse 34% 15% at 50% 52%, #000 84%, transparent 100%);
 }
 
-.lobby-mascot.is-blinking .lobby-mascot__frame--blink {
+.lobby-mascot__frame--mouth-small,
+.lobby-mascot__frame--mouth-wide {
+  -webkit-mask-image: radial-gradient(ellipse 15% 10% at 50% 62%, #000 74%, transparent 100%);
+  mask-image: radial-gradient(ellipse 15% 10% at 50% 62%, #000 74%, transparent 100%);
+}
+
+.lobby-mascot.is-blinking:not(.is-talking) .lobby-mascot__frame--eyes-closed {
   opacity: 1;
 }
 
-.lobby-mascot.is-talking .lobby-mascot__frame--awake,
-.lobby-mascot.is-talking .lobby-mascot__frame--blink {
-  opacity: 0;
-}
-
-.lobby-mascot.is-talking .lobby-mascot__frame--talk-small {
+.lobby-mascot.is-talking:not(.has-closed-mouth):not(.has-wide-mouth) .lobby-mascot__frame--mouth-small {
   opacity: 1;
 }
 
-.lobby-mascot.is-talking.has-closed-mouth .lobby-mascot__frame--awake {
-  opacity: 1;
-}
-
-.lobby-mascot.is-talking.has-closed-mouth .lobby-mascot__frame--talk-small {
-  opacity: 0;
-}
-
-.lobby-mascot.is-talking.has-wide-mouth .lobby-mascot__frame--talk-small {
-  opacity: 0;
-}
-
-.lobby-mascot.is-talking.has-wide-mouth .lobby-mascot__frame--talk-wide {
+.lobby-mascot.is-talking.has-wide-mouth .lobby-mascot__frame--mouth-wide {
   opacity: 1;
 }
 
@@ -923,6 +1005,21 @@
 @keyframes tap-hint {
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(6px) scale(.96); }
+}
+
+@keyframes tap-frame-raised {
+  0%, 54%, 76%, 100% { opacity: 1; }
+  55%, 75% { opacity: 0; }
+}
+
+@keyframes tap-frame-pressed {
+  0%, 54%, 76%, 100% { opacity: 0; }
+  55%, 75% { opacity: 1; }
+}
+
+@keyframes intro-loader-bounce {
+  0%, 60%, 100% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-10px) scale(1.08); }
 }
 
 @keyframes tap-ripple {
