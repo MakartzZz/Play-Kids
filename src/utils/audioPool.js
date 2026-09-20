@@ -13,10 +13,30 @@ export const getBufferedAudio = (source) => {
   return audioPool.get(source)
 }
 
+export const configureBufferedAudio = (audio, { loop, volume }) => {
+  if (!audio) return
+  audio.loop = loop
+  audio.volume = volume
+}
+
 export const rewindBufferedAudio = (audio) => {
   if (!audio) return
   audio.pause()
   audio.currentTime = 0
+}
+
+export const releaseBufferedAudio = (source) => {
+  const audio = audioPool.get(source)
+  if (!audio) {
+    audioPreparationPool.delete(source)
+    return
+  }
+
+  audio.pause()
+  audio.removeAttribute('src')
+  audio.load()
+  audioPool.delete(source)
+  audioPreparationPool.delete(source)
 }
 
 export const prepareBufferedAudio = (source) => {

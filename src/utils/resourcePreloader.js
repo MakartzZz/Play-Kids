@@ -1,4 +1,4 @@
-import { prepareBufferedAudio } from './audioPool.js'
+import { prepareBufferedAudio, releaseBufferedAudio } from './audioPool.js'
 
 const assetModules = import.meta.glob([
   '../assets/**/*.{png,jpg,jpeg,webp,svg,mp3}',
@@ -119,6 +119,15 @@ const preloadResource = async ({ source, type }) => {
 
 export const getLobbyResources = () => ASSETS.filter(({ path }) => isLobbyAsset(path))
 export const getGameResources = (gameId) => ASSETS.filter(({ path }) => isGameAsset(path, gameId))
+
+export const releaseResources = (resources) => {
+  const uniqueResources = [...new Map(resources.map((resource) => [resource.source, resource])).values()]
+
+  uniqueResources.forEach(({ source, type }) => {
+    loadedSources.delete(source)
+    if (type === 'audio') releaseBufferedAudio(source)
+  })
+}
 
 export const preloadResources = async (resources, onProgress = () => {}) => {
   const uniqueResources = [...new Map(resources.map((resource) => [resource.source, resource])).values()]

@@ -31,7 +31,7 @@ function App() {
 
   useBackgroundMusic(
     lobbyMedia.musicSource,
-    screen !== 'intro' && !muted,
+    screen === 'lobby' && !muted,
     isLobbyNarrationPlaying || isGuideNarrationPlaying
       ? lobbyMedia.musicDuckedVolume
       : lobbyMedia.musicVolume,
@@ -45,7 +45,7 @@ function App() {
 
   const returnToLobby = () => {
     setLobbyEntry((current) => ({ type: 'gameReturn', visit: current.visit + 1 }))
-    setScreen('lobby')
+    setScreen('lobby-loading')
   }
 
   if (screen === 'intro') {
@@ -57,6 +57,16 @@ function App() {
       <ResourceLoadingScreen
         game={selectedGame}
         onComplete={() => setScreen('game')}
+      />
+    )
+  }
+
+  if (screen === 'lobby-loading' && selectedGame) {
+    return (
+      <ResourceLoadingScreen
+        destination="lobby"
+        game={selectedGame}
+        onComplete={() => setScreen('lobby')}
       />
     )
   }

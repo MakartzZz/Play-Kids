@@ -1,18 +1,13 @@
 import { useEffect, useRef } from 'react'
-import { getBufferedAudio } from '../utils/audioPool.js'
+import { configureBufferedAudio, getBufferedAudio } from '../utils/audioPool.js'
 
 function useBackgroundMusic(source, shouldPlay, volume = 0.18) {
   const audioRef = useRef(null)
   const shouldPlayRef = useRef(shouldPlay)
 
   useEffect(() => {
-    const audio = getBufferedAudio(source)
-    audio.loop = true
-    audioRef.current = audio
-
     return () => {
-      audio.pause()
-      audio.currentTime = 0
+      audioRef.current?.pause()
       audioRef.current = null
     }
   }, [source])
@@ -22,9 +17,14 @@ function useBackgroundMusic(source, shouldPlay, volume = 0.18) {
   }, [volume])
 
   useEffect(() => {
-    const audio = audioRef.current
     shouldPlayRef.current = shouldPlay
+    const audio = shouldPlay ? getBufferedAudio(source) : audioRef.current
     if (!audio) return undefined
+
+    if (shouldPlay) {
+      configureBufferedAudio(audio, { loop: true, volume })
+      audioRef.current = audio
+    }
 
     let active = true
 
@@ -71,8 +71,12 @@ function useBackgroundMusic(source, shouldPlay, volume = 0.18) {
     window.addEventListener('pagehide', pauseMusic)
     window.addEventListener('pageshow', handlePageShow)
 
-    if (shouldPlay) beginPlayback()
-    else pauseMusic()
+    if (shouldPlay) {
+      beginPlayback()
+    } else {
+      pauseMusic()
+      if (audioRef.current === audio) audioRef.current = null
+    }
 
     return () => {
       active = false
@@ -81,7 +85,7 @@ function useBackgroundMusic(source, shouldPlay, volume = 0.18) {
       window.removeEventListener('pagehide', pauseMusic)
       window.removeEventListener('pageshow', handlePageShow)
     }
-  }, [shouldPlay])
+  }, [shouldPlay, source, volume])
 }
 
 export default useBackgroundMusic

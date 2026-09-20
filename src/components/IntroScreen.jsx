@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { introMedia } from '../config/media.js'
 import tapHandPressed from '../assets/ui/tap-hand-pressed.png'
 import tapHandRaised from '../assets/ui/tap-hand-raised.png'
+import { checkForAppUpdate } from '../utils/appUpdater.js'
 import { getBufferedAudio } from '../utils/audioPool.js'
 import { getLobbyResources, preloadResources } from '../utils/resourcePreloader.js'
 import BrandLogo from './BrandLogo.jsx'
@@ -19,6 +20,7 @@ const isAppleTouchDevice = () => {
 function IntroScreen({ onComplete }) {
   const [phase, setPhase] = useState('loading')
   const [loadingProgress, setLoadingProgress] = useState(0)
+  const [loadingLabel, setLoadingLabel] = useState('Buscando actualizaciones...')
   const [requiresInteraction, setRequiresInteraction] = useState(false)
   const [ripple, setRipple] = useState(null)
   const audioRef = useRef(null)
@@ -76,6 +78,10 @@ function IntroScreen({ onComplete }) {
     }
 
     const initialize = async () => {
+      await checkForAppUpdate()
+      if (cancelled) return
+
+      setLoadingLabel('Cargando aventuras...')
       await preloadResources(LOBBY_RESOURCES, (progress) => {
         if (!cancelled) setLoadingProgress(progress)
       })
@@ -133,7 +139,7 @@ function IntroScreen({ onComplete }) {
       {phase === 'loading' && (
         <div className="intro-screen__loader" role="status" aria-live="polite">
           <span className="intro-screen__loader-dots" aria-hidden="true"><i /><i /><i /></span>
-          <strong>Cargando aventuras...</strong>
+          <strong>{loadingLabel}</strong>
           <span className="intro-screen__progress" aria-hidden="true">
             <i style={{ width: `${loadingProgress}%` }} />
           </span>
