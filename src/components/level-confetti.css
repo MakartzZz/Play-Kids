@@ -1,0 +1,44 @@
+.level-confetti {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.level-confetti__particle {
+  position: absolute;
+  top: var(--confetti-top);
+  width: var(--confetti-size);
+  height: calc(var(--confetti-size) * .55);
+  border-radius: 2px;
+  opacity: 0;
+  background: var(--confetti-color);
+  box-shadow: 0 1px 2px rgba(42, 30, 71, .16);
+  animation-duration: var(--confetti-duration);
+  animation-delay: var(--confetti-delay);
+  animation-timing-function: cubic-bezier(.12, .64, .28, 1);
+  animation-fill-mode: both;
+}
+
+.level-confetti__particle.is-round { border-radius: 50%; }
+.level-confetti__particle.is-left { left: -16px; animation-name: level-confetti-left; }
+.level-confetti__particle.is-right { right: -16px; animation-name: level-confetti-right; }
+
+@keyframes level-confetti-left {
+  0% { opacity: 0; transform: translate3d(-10px, 12px, 0) rotate(0); }
+  12% { opacity: 1; }
+  76% { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(var(--confetti-travel), var(--confetti-rise), 0) rotate(var(--confetti-spin)); }
+}
+
+@keyframes level-confetti-right {
+  0% { opacity: 0; transform: translate3d(10px, 12px, 0) rotate(0); }
+  12% { opacity: 1; }
+  76% { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(var(--confetti-travel-back), var(--confetti-rise), 0) rotate(var(--confetti-spin-back)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .level-confetti__particle { animation-duration: 1ms; }
+}
