@@ -217,19 +217,20 @@
 .directions-position {
   position: absolute;
   z-index: 3;
-  top: var(--cell-top);
-  left: var(--cell-left);
+  top: 0;
+  left: 0;
   display: grid;
   place-items: center;
   width: calc(100% / 8);
   height: calc(100% / 4);
+  translate: var(--cell-x) var(--cell-y);
   pointer-events: none;
 }
 
 .directions-position--rabbit {
   z-index: 5;
-  transition: top 220ms cubic-bezier(.2, .8, .25, 1), left 220ms cubic-bezier(.2, .8, .25, 1);
-  will-change: top, left, transform, opacity;
+  transition: translate 220ms cubic-bezier(.2, .8, .25, 1);
+  will-change: translate, transform, opacity;
 }
 
 .directions-position--rabbit.is-entering-burrow {
@@ -247,9 +248,8 @@
 .directions-board__piece--rabbit {
   position: relative;
   width: 90%;
-  animation:
-    directions-rabbit-hop 440ms cubic-bezier(.25, .75, .35, 1),
-    directions-rabbit-idle 1.8s 440ms ease-in-out infinite;
+  animation: directions-rabbit-idle 1.8s ease-in-out infinite;
+  will-change: transform;
 }
 
 .direction-sprite--rabbit > img {
@@ -384,13 +384,6 @@
   50% { transform: translateY(-5%); }
 }
 
-@keyframes directions-rabbit-hop {
-  0% { transform: translateY(0) scale(1); }
-  45% { transform: translateY(-30%) scale(1.06); }
-  78% { transform: translateY(-4%) scaleX(1.05) scaleY(.95); }
-  100% { transform: translateY(0) scale(1); }
-}
-
 @keyframes directions-enter-burrow {
   0% { transform: scale(1); opacity: 1; }
   65% { transform: scale(.42); opacity: .9; }
@@ -421,6 +414,12 @@
   .direction-button.is-hint-active {
     animation: none;
     filter: brightness(1.15);
+  }
+}
+
+@media (pointer: coarse) {
+  .directions-guide-path__line {
+    animation: none;
   }
 }
 
@@ -556,8 +555,8 @@
   }
 
   .directions-position {
-    top: var(--cell-top);
-    left: var(--cell-left);
+    top: 0;
+    left: 0;
     width: calc(100% / 8);
     height: calc(100% / 4);
   }

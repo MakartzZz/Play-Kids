@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import LobbyMascot from '../../components/LobbyMascot.jsx'
 import LevelConfetti from '../../components/LevelConfetti.jsx'
 import { HintIcon, HomeIcon, RestartIcon, SoundIcon } from '../../components/UiIcons.jsx'
@@ -89,7 +89,7 @@ const INVALID_MOVE_NARRATION_SOUNDS = {
 }
 
 const DIRECTION_LABELS = { up: 'Arriba', down: 'Abajo', left: 'Izquierda', right: 'Derecha' }
-const getCellStyle = ({ x, y }) => ({ '--cell-left': `${x * 12.5}%`, '--cell-top': `${y * 25}%` })
+const getCellStyle = ({ x, y }) => ({ '--cell-x': `${x * 100}%`, '--cell-y': `${y * 100}%` })
 
 const getGuidePath = (start, goal, obstacles) => {
   const blocked = new Set(obstacles.map(({ x, y }) => `${x}-${y}`))
@@ -143,15 +143,19 @@ const getTileType = (index) => {
   return 'center'
 }
 
-function ArrowIcon({ direction }) {
+const BOARD_TILES = Array.from({ length: BOARD_COLUMNS * BOARD_ROWS }, (_, index) => (
+  <i className={`directions-tile directions-tile--${getTileType(index)}`} key={index} />
+))
+
+const ArrowIcon = memo(function ArrowIcon({ direction }) {
   const rotations = { up: 0, right: 90, down: 180, left: -90 }
   return <img className="direction-button__arrow" src={movementArrow} alt="" aria-hidden="true" style={{ transform: `rotate(${rotations[direction]}deg)` }} />
-}
+})
 
-function DirectionSprite({ type, className = '' }) {
+const DirectionSprite = memo(function DirectionSprite({ type, className = '', spriteRef = null }) {
   if (type === 'rabbit') {
     return (
-      <span className={`direction-sprite direction-sprite--rabbit ${className}`} aria-hidden="true">
+      <span ref={spriteRef} className={`direction-sprite direction-sprite--rabbit ${className}`} aria-hidden="true">
         <img className="direction-sprite__rabbit-open" src={rabbitSprite} alt="" />
         <img className="direction-sprite__rabbit-blink" src={rabbitBlinkSprite} alt="" />
       </span>
@@ -159,7 +163,7 @@ function DirectionSprite({ type, className = '' }) {
   }
 
   return <img src={DIRECTION_SPRITES[type]} className={`direction-sprite direction-sprite--${type} ${className}`} alt="" aria-hidden="true" />
-}
+})
 
 function DirectionsGame({ game, muted, onToggleSound, onBack }) {
   const [levelIndex, setLevelIndex] = useState(0)
@@ -169,7 +173,6 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
   const [activeHintDirection, setActiveHintDirection] = useState(null)
   const [levelSolved, setLevelSolved] = useState(false)
   const [completed, setCompleted] = useState(false)
-  const [moveCount, setMoveCount] = useState(0)
   const nextLevelTimerRef = useRef(null)
   const idleHintTimerRef = useRef(null)
   const invalidNarrationTimerRef = useRef(null)
@@ -180,10 +183,17 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
   const invalidMoveAudioRefs = useRef({ outside: [], rock: [], bush: [] })
   const lastInvalidMoveIndexRef = useRef({ outside: null, rock: null, bush: null })
   const activeNarrationAudioRef = useRef(null)
+  const rabbitSpriteRef = useRef(null)
+  const rabbitHopAnimationRef = useRef(null)
+  const movementAudioFramesRef = useRef(new Set())
   const level = LEVELS[levelIndex]
-  const guidePath = getGuidePath(position, level.goal, level.obstacles)
-  const guidePoints = getGuidePoints(guidePath)
-  const nextPathDirection = getNextPathDirection(guidePath)
+  const { guidePoints, nextPathDirection } = useMemo(() => {
+    const guidePath = getGuidePath(position, level.goal, level.obstacles)
+    return {
+      guidePoints: getGuidePoints(guidePath),
+      nextPathDirection: getNextPathDirection(guidePath),
+    }
+  }, [level, position])
 
   useEffect(() => {
     const sounds = [jumpSoundOne, jumpSoundTwo].map((source) => {
@@ -265,6 +275,25 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
     window.clearTimeout(nextLevelTimerRef.current)
     window.clearTimeout(idleHintTimerRef.current)
     window.clearTimeout(invalidNarrationTimerRef.current)
+    rabbitHopAnimationRef.current?.cancel()
+    movementAudioFramesRef.current.forEach((frame) => window.cancelAnimationFrame(frame))
+    movementAudioFramesRef.current.clear()
+  }, [])
+
+  const animateRabbitHop = useCallback(() => {
+    const sprite = rabbitSpriteRef.current
+    if (!sprite?.animate) return
+
+    rabbitHopAnimationRef.current?.cancel()
+    rabbitHopAnimationRef.current = sprite.animate([
+      { transform: 'translateY(0) scale(1)', offset: 0 },
+      { transform: 'translateY(-30%) scale(1.06)', offset: 0.45 },
+      { transform: 'translateY(-4%) scaleX(1.05) scaleY(.95)', offset: 0.78 },
+      { transform: 'translateY(0) scale(1)', offset: 1 },
+    ], {
+      duration: 440,
+      easing: 'cubic-bezier(.25, .75, .35, 1)',
+    })
   }, [])
 
   const playDirectionHint = useCallback(() => {
@@ -329,6 +358,25 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
       console.warn('No se pudo reproducir el mensaje de movimiento inválido.')
     })
   }, [muted])
+
+  const scheduleMovementAudio = useCallback((direction) => {
+    const firstFrame = window.requestAnimationFrame(() => {
+      movementAudioFramesRef.current.delete(firstFrame)
+      const secondFrame = window.requestAnimationFrame(() => {
+        movementAudioFramesRef.current.delete(secondFrame)
+
+        if (!muted && jumpSoundsRef.current.length) {
+          const sound = jumpSoundsRef.current[jumpVariantRef.current]
+          jumpVariantRef.current = (jumpVariantRef.current + 1) % jumpSoundsRef.current.length
+          rewindBufferedAudio(sound)
+          void sound.play().catch(() => {})
+        }
+        playDirectionButtonAudio(direction)
+      })
+      movementAudioFramesRef.current.add(secondFrame)
+    })
+    movementAudioFramesRef.current.add(firstFrame)
+  }, [muted, playDirectionButtonAudio])
 
   const restartIdleHintTimer = useCallback(() => {
     window.clearTimeout(idleHintTimerRef.current)
@@ -403,17 +451,9 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
 
     setPosition(next)
     window.clearTimeout(invalidNarrationTimerRef.current)
-    setMoveCount((count) => count + 1)
     setFeedback(null)
-
-    if (!muted && jumpSoundsRef.current.length) {
-      const sound = jumpSoundsRef.current[jumpVariantRef.current]
-      jumpVariantRef.current = (jumpVariantRef.current + 1) % jumpSoundsRef.current.length
-      sound.pause()
-      sound.currentTime = 0
-      sound.play().catch(() => {})
-    }
-    playDirectionButtonAudio(direction)
+    animateRabbitHop()
+    scheduleMovementAudio(direction)
 
     if (next.x === level.goal.x && next.y === level.goal.y) {
       playLevelComplete()
@@ -432,7 +472,7 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
         setLevelSolved(false)
       }, 1100)
     }
-  }, [completed, level, levelIndex, levelSolved, muted, playDirectionButtonAudio, playInvalidMoveNarration, position])
+  }, [animateRabbitHop, completed, level, levelIndex, levelSolved, playInvalidMoveNarration, position, scheduleMovementAudio])
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -454,7 +494,6 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
     setFeedback(null)
     setLevelSolved(false)
     setCompleted(false)
-    setMoveCount(0)
   }
 
   return (
@@ -503,9 +542,7 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
         </div>
 
         <div className="directions-board" aria-label="Camino hacia la madriguera">
-          {Array.from({ length: BOARD_COLUMNS * BOARD_ROWS }, (_, index) => (
-            <i className={`directions-tile directions-tile--${getTileType(index)}`} key={index} />
-          ))}
+          {BOARD_TILES}
           <svg className="directions-guide-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             <defs>
               <marker id="directions-path-arrow" markerWidth="4" markerHeight="4" refX="3" refY="2" orient="auto" markerUnits="strokeWidth">
@@ -528,7 +565,11 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
             style={getCellStyle(position)}
             key={`rabbit-${levelIndex}`}
           >
-            <DirectionSprite type="rabbit" className="directions-board__piece directions-board__piece--rabbit" key={moveCount} />
+            <DirectionSprite
+              type="rabbit"
+              className="directions-board__piece directions-board__piece--rabbit"
+              spriteRef={rabbitSpriteRef}
+            />
           </span>
         </div>
 
@@ -537,6 +578,7 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
             <button
               type="button"
               className={`direction-button direction-button--${direction} ${activeHintDirection === direction ? 'is-hint-active' : ''}`}
+              data-interface-sound="off"
               onClick={() => moveRabbit(direction)}
               aria-label={DIRECTION_LABELS[direction]}
               key={direction}

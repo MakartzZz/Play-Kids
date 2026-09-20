@@ -45,7 +45,7 @@ function useInterfaceSounds(muted) {
 
     const handlePointerOver = (event) => {
       const button = event.target.closest?.('button')
-      if (!button || button.disabled || button.contains(event.relatedTarget)) return
+      if (!button || button.disabled || button.dataset.interfaceSound === 'off' || button.contains(event.relatedTarget)) return
       play(hoverSound, 0.42)
     }
 
@@ -54,7 +54,7 @@ function useInterfaceSounds(muted) {
     const handleMiss = () => play(missSound, 0.43)
     const handleClick = (event) => {
       const button = event.target.closest?.('button')
-      if (!button || button.disabled) return
+      if (!button || button.disabled || button.dataset.interfaceSound === 'off') return
       play(clickSound, 0.38)
     }
 
