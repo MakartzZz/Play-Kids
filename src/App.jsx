@@ -22,19 +22,25 @@ function App() {
   const [isGuideNarrationPlaying, setIsGuideNarrationPlaying] = useState(false)
 
   const narrationSource = lobbyMedia.narrationByEntry[lobbyEntry.type]
+  const isLobbyScreen = screen === 'lobby'
+  const isGameScreen = screen === 'game' && Boolean(selectedGame)
+  const backgroundMusicSource = isGameScreen ? selectedGame.musicSource : lobbyMedia.musicSource
   const isLobbyNarrationPlaying = useLobbyNarration({
     cueId: `${lobbyEntry.type}-${lobbyEntry.visit}`,
     source: narrationSource,
     shouldPlay: screen === 'lobby' && !muted,
     volume: lobbyMedia.narrationVolume,
   })
+  const backgroundMusicVolume = isGameScreen
+    ? selectedGame.musicVolume
+    : isLobbyNarrationPlaying || isGuideNarrationPlaying
+      ? lobbyMedia.musicDuckedVolume
+      : lobbyMedia.musicVolume
 
   useBackgroundMusic(
-    lobbyMedia.musicSource,
-    screen === 'lobby' && !muted,
-    isLobbyNarrationPlaying || isGuideNarrationPlaying
-      ? lobbyMedia.musicDuckedVolume
-      : lobbyMedia.musicVolume,
+    backgroundMusicSource,
+    (isLobbyScreen || isGameScreen) && !muted,
+    backgroundMusicVolume,
   )
   useInterfaceSounds(muted)
 
