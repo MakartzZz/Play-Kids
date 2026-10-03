@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import LobbyMascot from '../../components/LobbyMascot.jsx'
 import LevelConfetti from '../../components/LevelConfetti.jsx'
+import LevelTransition from '../../components/LevelTransition.jsx'
 import { HomeIcon, RestartIcon, SoundIcon } from '../../components/UiIcons.jsx'
 import { playCorrect, playLevelComplete, playMiss } from '../../hooks/useInterfaceSounds.js'
 import { isPageActive } from '../../utils/pageActivity.js'
@@ -293,6 +294,7 @@ function EmotionsGame({ game, muted, onToggleSound, onBack }) {
 
   return (
     <main className="emotions-game">
+      <LevelTransition current={levelIndex + 1} total={LEVELS.length} />
       <header className="emotions-header">
         <div className="emotions-status">
           <img src={game.icon} alt="" />

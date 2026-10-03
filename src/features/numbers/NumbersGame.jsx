@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import LobbyMascot from '../../components/LobbyMascot.jsx'
 import LevelConfetti from '../../components/LevelConfetti.jsx'
+import LevelTransition from '../../components/LevelTransition.jsx'
 import { HintIcon, HomeIcon, RestartIcon, SoundIcon } from '../../components/UiIcons.jsx'
 import { playCorrect, playLevelComplete, playMiss } from '../../hooks/useInterfaceSounds.js'
 import { isPageActive } from '../../utils/pageActivity.js'
@@ -123,6 +124,7 @@ function NumbersGame({ game, muted, onToggleSound, onBack }) {
   const activeNarrationAudioRef = useRef(null)
   const lastCorrectNarrationIndexRef = useRef(null)
   const lastErrorNarrationIndexRef = useRef(null)
+  const hasPlayedOpeningHintRef = useRef(false)
 
   const groups = useMemo(() => shuffle(LEVEL_SPRITES[levelIndex].map((sprite, index) => ({
     count: index + 1,
@@ -220,6 +222,15 @@ function NumbersGame({ game, muted, onToggleSound, onBack }) {
     if (completed) return
     playNarration(hintAudioRef.current)
   }, [completed, playNarration])
+
+  useEffect(() => {
+    if (muted || hasPlayedOpeningHintRef.current || !isPageActive()) return undefined
+    const timer = window.setTimeout(() => {
+      hasPlayedOpeningHintRef.current = true
+      playHint()
+    }, 320)
+    return () => window.clearTimeout(timer)
+  }, [muted, playHint])
 
   const playNumberTarget = useCallback((number) => {
     playNarration(targetAudioRefs.current[number])
@@ -381,6 +392,7 @@ function NumbersGame({ game, muted, onToggleSound, onBack }) {
 
   return (
     <main className="numbers-game">
+      <LevelTransition current={levelIndex + 1} total={TOTAL_LEVELS} />
       <header className="numbers-header">
         <div className="numbers-status">
           <img src={game.icon} alt="" />

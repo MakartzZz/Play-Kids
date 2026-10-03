@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import LobbyMascot from '../../components/LobbyMascot.jsx'
 import LevelConfetti from '../../components/LevelConfetti.jsx'
+import LevelTransition from '../../components/LevelTransition.jsx'
 import { HintIcon, HomeIcon, RestartIcon, SoundIcon } from '../../components/UiIcons.jsx'
 import { playCorrect, playLevelComplete, playMiss } from '../../hooks/useInterfaceSounds.js'
 import { isPageActive } from '../../utils/pageActivity.js'
@@ -150,6 +151,7 @@ function ClassificationGame({ game, muted, onToggleSound, onBack }) {
   const activeNarrationRef = useRef(null)
   const lastErrorNarrationIndexRef = useRef(null)
   const lastCorrectNarrationIndexRef = useRef(null)
+  const hasPlayedOpeningHintRef = useRef(false)
 
   const objects = useMemo(() => {
     const colors = shuffled(ROUND_COLORS[round - 1])
@@ -254,6 +256,15 @@ function ClassificationGame({ game, muted, onToggleSound, onBack }) {
   const playHint = useCallback(() => {
     playNarration(hintAudioRef.current)
   }, [playNarration])
+
+  useEffect(() => {
+    if (muted || hasPlayedOpeningHintRef.current || !isPageActive()) return undefined
+    const timer = window.setTimeout(() => {
+      hasPlayedOpeningHintRef.current = true
+      playHint()
+    }, 320)
+    return () => window.clearTimeout(timer)
+  }, [muted, playHint])
 
   const playBoxColor = useCallback((color) => {
     playNarration(boxAudioRefs.current[color], color)
@@ -456,6 +467,7 @@ function ClassificationGame({ game, muted, onToggleSound, onBack }) {
       onKeyDownCapture={restartIdleHintTimer}
       onPointerDownCapture={restartIdleHintTimer}
     >
+      <LevelTransition current={round} total={TOTAL_ROUNDS} label="Ronda" />
       <header className="classification-header">
         <div className="classification-status">
           <img src={game.icon} alt="" />

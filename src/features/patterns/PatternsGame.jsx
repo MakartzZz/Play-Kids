@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import LobbyMascot from '../../components/LobbyMascot.jsx'
 import LevelConfetti from '../../components/LevelConfetti.jsx'
+import LevelTransition from '../../components/LevelTransition.jsx'
 import { HintIcon, HomeIcon, RestartIcon, SoundIcon } from '../../components/UiIcons.jsx'
 import { playCorrect, playLevelComplete, playMiss } from '../../hooks/useInterfaceSounds.js'
 import { isPageActive } from '../../utils/pageActivity.js'
@@ -363,6 +364,7 @@ function PatternsGame({ game, muted, onToggleSound, onBack }) {
 
   return (
     <main className="patterns-game">
+      <LevelTransition current={levelIndex + 1} total={LEVELS.length} />
       <header className="patterns-header">
         <div className="patterns-status">
           <img src={game.icon} alt="" />

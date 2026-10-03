@@ -1,0 +1,188 @@
+.balloons-game {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: #62c8f0 url('../../assets/backgrounds/balloons-landscape.png') center / cover no-repeat;
+  color: #173b74;
+}
+
+.balloons-header {
+  position: relative;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 70px;
+  padding: calc(7px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 5px max(16px, env(safe-area-inset-left));
+}
+
+.balloons-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px 6px 8px;
+  border: 3px solid #fff;
+  border-radius: 23px;
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 7px 0 #4ca2c8,0 12px 20px rgba(31,91,128,.18);
+}
+
+.balloons-status > img { width: 48px; height: 48px; object-fit: contain; }
+.balloons-status > span { display: grid; gap: 4px; }
+.balloons-status strong { font-size: 1rem; line-height: 1; }
+.balloons-levels { display: flex; gap: 5px; }
+.balloons-levels i { width: 23px; height: 8px; border-radius: 8px; background: #cce8f3; }
+.balloons-levels i.is-filled { background: #20a7d4; box-shadow: inset 0 -2px rgba(0,92,132,.18); }
+.balloons-header__actions { display: flex; gap: 11px; }
+
+.balloons-goal {
+  position: relative;
+  z-index: 25;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 52px;
+  align-items: center;
+  gap: 12px;
+  width: min(calc(100% - 28px),850px);
+  min-height: 108px;
+  margin: 5px auto 8px;
+  padding: 10px 16px 10px 102px;
+  border: 3px solid #fff;
+  border-radius: 28px;
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 8px 0 rgba(61,157,197,.84),0 14px 25px rgba(31,91,128,.17);
+}
+
+.balloons-goal__mascot { position: absolute; left: 8px; width: 90px; height: 90px; filter: drop-shadow(0 7px 7px rgba(124,81,28,.18)); }
+.balloons-goal__mission { display: flex; align-items: center; justify-content: center; gap: clamp(7px,2vw,16px); min-width: 0; color: #405b7d; font-size: clamp(.9rem,2.2vw,1.25rem); font-weight: 900; white-space: nowrap; }
+.balloons-goal__mission strong { color: #173b74; font-size: clamp(3.2rem,7vw,5.2rem); line-height: .8; }
+.balloons-goal__mission .balloon-image { width: clamp(58px,8vw,78px); }
+.balloons-hint { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; color: #fff; background: linear-gradient(145deg,#b276f3,#7646dd); box-shadow: 0 5px 0 #6034bd; }
+.balloons-hint svg { width: 25px; height: 25px; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+.balloons-playfield { position: relative; z-index: 2; flex: 1; min-height: 330px; overflow: hidden; }
+.balloons-layer { position: absolute; z-index: 7; inset: 0; overflow: hidden; }
+
+.balloon-button {
+  position: absolute;
+  bottom: -150px;
+  left: clamp(
+    var(--balloon-left-limit),
+    var(--balloon-x),
+    calc(100% - var(--balloon-size) - var(--balloon-right-limit))
+  );
+  width: var(--balloon-size);
+  height: var(--balloon-size);
+  padding: 0;
+  background: transparent;
+  animation: balloon-rise var(--balloon-duration) linear var(--balloon-delay) forwards;
+  will-change: transform;
+}
+
+.balloon-button .balloon-image { width: 100%; }
+.balloon-button.is-popped .balloon-image { animation: balloon-pop 260ms ease-out forwards; }
+.balloon-button.is-wrong .balloon-image { animation: balloon-wrong 430ms ease-in-out; }
+.balloon-button.is-hinted .balloon-image { animation: balloon-hint 700ms ease-in-out infinite alternate; filter: drop-shadow(0 0 14px #fff) drop-shadow(0 0 9px #ffdf45); }
+.balloons-playfield.is-paused .balloon-button { animation-play-state: paused; pointer-events: none; }
+
+.balloon-image { display: block; aspect-ratio: 1; background-size: 300% 200%; background-repeat: no-repeat; filter: drop-shadow(0 8px 7px rgba(40,83,106,.18)); }
+.balloon-image--red { background-position: 0 0; }
+.balloon-image--blue { background-position: 50% 0; }
+.balloon-image--yellow { background-position: 100% 0; }
+.balloon-image--green { background-position: 0 100%; }
+.balloon-image--purple { background-position: 50% 100%; }
+.balloon-image--orange { background-position: 100% 100%; }
+
+.balloons-counter {
+  position: absolute;
+  z-index: 18;
+  right: 50%;
+  bottom: max(15px,env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: center;
+  gap: clamp(1px,.4vw,5px);
+  min-width: 210px;
+  padding: 6px 12px;
+  border: 3px solid #fff;
+  border-radius: 24px;
+  background: rgba(255,255,255,.9);
+  box-shadow: 0 6px 0 rgba(56,145,184,.8),0 11px 18px rgba(31,91,128,.16);
+  transform: translateX(50%);
+}
+.balloons-counter .balloon-image { width: clamp(25px,4vw,40px); opacity: .2; filter: grayscale(.4); transition: opacity 180ms ease,transform 180ms ease,filter 180ms ease; }
+.balloons-counter .balloon-image.is-counted { opacity: 1; filter: none; transform: translateY(-3px) scale(1.08); }
+
+.balloons-feedback {
+  position: absolute;
+  z-index: 20;
+  top: 10px;
+  left: 50%;
+  max-width: calc(100% - 32px);
+  padding: 10px 22px;
+  border: 3px solid #fff;
+  border-radius: 22px;
+  color: #17466e;
+  background: #fff6c9;
+  box-shadow: 0 6px 0 #e2a934,0 11px 17px rgba(85,80,37,.17);
+  font-size: clamp(1rem,3vw,1.45rem);
+  font-weight: 1000;
+  text-align: center;
+  transform: translateX(-50%);
+  animation: balloon-feedback-in 230ms ease-out;
+}
+.balloons-feedback.is-hint { background: #f2eaff; box-shadow: 0 6px 0 #8558cf,0 11px 17px rgba(73,48,117,.16); }
+
+.balloons-complete { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(31,57,91,.48); backdrop-filter: blur(7px); }
+.balloons-complete > div:last-child { position: relative; z-index: 2; display: grid; justify-items: center; width: min(92vw,480px); padding: 28px; border: 5px solid #fff; border-radius: 34px; background: linear-gradient(180deg,#fff,#eafbff); box-shadow: 0 15px 0 #3c9fc8,0 25px 50px rgba(24,50,78,.28); text-align: center; }
+.balloons-complete img { width: 128px; height: 128px; object-fit: contain; }
+.balloons-complete h2 { margin: 0; color: #173b74; font-size: clamp(2.2rem,9vw,3.4rem); }
+.balloons-complete p { margin: 7px 0 15px; color: #52719c; font-weight: 850; }
+.balloons-complete__actions { display: flex; gap: 18px; }
+.balloons-complete__actions button { display: grid; place-items: center; width: 78px; height: 70px; border-radius: 22px; color: #fff; background: #58c84f; box-shadow: 0 5px 0 #368e35; }
+.balloons-complete__actions button.is-secondary { background: #f5a51b; box-shadow: 0 5px 0 #c97512; }
+.balloons-complete__actions svg { width: 40px; height: 40px; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+@keyframes balloon-rise { from { transform: translate3d(0,0,0) rotate(var(--balloon-tilt)); } to { transform: translate3d(var(--balloon-drift),calc(-100vh - 240px),0) rotate(calc(var(--balloon-tilt) * -1)); } }
+@keyframes balloon-pop { 0% { opacity: 1; transform: scale(1); } 38% { transform: scale(.84); } 100% { opacity: 0; transform: scale(1.45); filter: brightness(1.45) drop-shadow(0 0 16px #fff); } }
+@keyframes balloon-wrong { 0%,100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(-9px) rotate(-6deg); } 55% { transform: translateX(10px) rotate(6deg); } 78% { transform: translateX(-5px) rotate(-3deg); } }
+@keyframes balloon-hint { to { transform: scale(1.12); } }
+@keyframes balloon-feedback-in { from { opacity: 0; transform: translate(-50%,-10px) scale(.92); } }
+
+@media (max-width:719px) {
+  .balloons-game { background-image: url('../../assets/backgrounds/balloons-portrait.png'); }
+  .balloons-header { min-height: 58px; padding: calc(4px + env(safe-area-inset-top)) 10px 3px; }
+  .balloons-status { gap: 6px; padding: 4px 8px 4px 5px; border-width: 2px; border-radius: 18px; }
+  .balloons-status > img { width: 34px; height: 34px; }
+  .balloons-status strong { font-size: .76rem; }
+  .balloons-levels { gap: 3px; }
+  .balloons-levels i { width: 14px; height: 6px; }
+  .balloons-header__actions { gap: 8px; }
+  .balloons-header__actions .round-button,.balloons-header__actions .home-button { width: 44px; height: 44px; flex-basis: 44px; }
+  .balloons-goal { grid-template-columns: minmax(0,1fr) 34px; gap: 4px; width: calc(100% - 18px); min-height: 68px; margin-top: 4px; padding: 5px 6px 5px 60px; border-width: 2px; border-radius: 22px; }
+  .balloons-goal__mascot { left: 2px; width: 58px; height: 58px; }
+  .balloons-goal__mission { flex-wrap: nowrap; gap: 4px; font-size: clamp(.62rem,2.8vw,.72rem); line-height: 1; }
+  .balloons-goal__mission strong { flex: 0 0 auto; font-size: 2rem; }
+  .balloons-goal__mission .balloon-image { flex: 0 0 auto; width: 30px; }
+  .balloons-hint { width: 33px; height: 33px; }
+  .balloons-hint svg { width: 21px; height: 21px; }
+  .balloon-button { --mobile-scale: .9; }
+  .balloons-counter { bottom: max(10px,env(safe-area-inset-bottom)); min-width: 0; padding: 5px 8px; border-width: 2px; }
+  .balloons-counter .balloon-image { width: clamp(22px,7vw,31px); }
+  .balloons-feedback { top: 5px; padding: 8px 15px; font-size: .9rem; }
+}
+
+@media (max-height:700px) and (orientation:landscape) {
+  .balloons-header { min-height: 56px; padding-block: 3px; }
+  .balloons-goal { position: absolute; top: 8px; left: 50%; grid-template-columns: minmax(0,1fr) 44px; width: min(58vw,760px); min-height: 70px; margin: 0; padding: 5px 7px 5px 72px; transform: translateX(-50%); }
+  .balloons-goal__mascot { width: 62px; height: 62px; }
+  .balloons-goal__mission { gap: 8px; font-size: .9rem; }
+  .balloons-goal__mission strong { font-size: 3.2rem; }
+  .balloons-goal__mission .balloon-image { width: 52px; }
+  .balloons-playfield { min-height: 260px; }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .balloon-button { animation-duration: 18s !important; }
+}

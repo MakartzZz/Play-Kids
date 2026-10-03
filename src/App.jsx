@@ -4,6 +4,7 @@ import GameLobby from './components/GameLobby.jsx'
 import GamePlaceholder from './components/GamePlaceholder.jsx'
 import IntroScreen from './components/IntroScreen.jsx'
 import ResourceLoadingScreen from './components/ResourceLoadingScreen.jsx'
+import BalloonsGame from './features/balloons/BalloonsGame.jsx'
 import ClassificationGame from './features/classification/ClassificationGame.jsx'
 import DirectionsGame from './features/directions/DirectionsGame.jsx'
 import EmotionsGame from './features/emotions/EmotionsGame.jsx'
@@ -62,6 +63,7 @@ function App() {
     return (
       <ResourceLoadingScreen
         game={selectedGame}
+        muted={muted}
         onComplete={() => setScreen('game')}
       />
     )
@@ -72,6 +74,7 @@ function App() {
       <ResourceLoadingScreen
         destination="lobby"
         game={selectedGame}
+        muted={muted}
         onComplete={() => setScreen('lobby')}
       />
     )
@@ -125,6 +128,17 @@ function App() {
     if (selectedGame.id === 'emociones') {
       return (
         <EmotionsGame
+          game={selectedGame}
+          muted={muted}
+          onToggleSound={() => setMuted((current) => !current)}
+          onBack={returnToLobby}
+        />
+      )
+    }
+
+    if (selectedGame.id === 'cuenta-explota') {
+      return (
+        <BalloonsGame
           game={selectedGame}
           muted={muted}
           onToggleSound={() => setMuted((current) => !current)}

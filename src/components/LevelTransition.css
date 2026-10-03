@@ -1,0 +1,137 @@
+.level-transition {
+  position: fixed;
+  z-index: 180;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: auto;
+  isolation: isolate;
+  animation: level-transition-visibility 1.25s both;
+}
+
+.level-transition__panel {
+  position: absolute;
+  z-index: -2;
+  top: 0;
+  bottom: 0;
+  width: 51%;
+  border-color: rgba(255,255,255,.7);
+  border-style: solid;
+  background: linear-gradient(145deg,#48d7e8,#229bd2);
+  box-shadow: 0 0 45px rgba(26,82,139,.22);
+}
+
+.level-transition__panel--left {
+  left: 0;
+  border-width: 0 4px 0 0;
+  animation: level-transition-left 1.25s cubic-bezier(.65,0,.35,1) both;
+}
+
+.level-transition__panel--right {
+  right: 0;
+  border-width: 0 0 0 4px;
+  background: linear-gradient(215deg,#9b69ee,#6751d9);
+  animation: level-transition-right 1.25s cubic-bezier(.65,0,.35,1) both;
+}
+
+.level-transition__card {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  width: min(78vw,360px);
+  padding: 16px 28px 22px;
+  border: 5px solid #fff;
+  border-radius: 34px;
+  color: #315579;
+  background: linear-gradient(180deg,#fff,#eafaff);
+  box-shadow: 0 10px 0 #f3b526,0 22px 45px rgba(26,55,100,.28);
+  text-align: center;
+  animation: level-transition-card 1.25s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.level-transition__mascot {
+  width: 112px;
+  height: 112px;
+  margin-top: -58px;
+  filter: drop-shadow(0 7px 7px rgba(91,61,24,.2));
+}
+
+.level-transition__card > span {
+  margin-top: 8px;
+  color: #526f91;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.level-transition__card > strong {
+  color: #173b74;
+  font-size: clamp(2.25rem,8vw,3.5rem);
+  line-height: 1;
+  text-shadow: 0 3px #fff,0 6px 12px rgba(36,87,135,.16);
+}
+
+.level-transition__progress {
+  display: flex;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.level-transition__progress i {
+  width: 28px;
+  height: 9px;
+  border-radius: 8px;
+  background: #cde8f3;
+  box-shadow: inset 0 -2px rgba(38,105,138,.12);
+}
+
+.level-transition__progress i.is-filled {
+  background: #40c76b;
+}
+
+.level-transition__spark {
+  position: absolute;
+  color: #ffd64a;
+  font-size: 1.55rem;
+  font-style: normal;
+  text-shadow: 0 2px #e49b1a;
+}
+
+.level-transition__spark--one { top: 18px; left: 24px; transform: rotate(-18deg); }
+.level-transition__spark--two { top: 42px; right: 23px; transform: rotate(16deg) scale(.7); }
+
+@keyframes level-transition-left {
+  0%,100% { transform: translateX(-105%); }
+  20%,72% { transform: translateX(0); }
+}
+
+@keyframes level-transition-right {
+  0%,100% { transform: translateX(105%); }
+  20%,72% { transform: translateX(0); }
+}
+
+@keyframes level-transition-card {
+  0%,16%,100% { opacity: 0; transform: translateY(20px) scale(.75); }
+  32%,68% { opacity: 1; transform: translateY(0) scale(1); }
+  82% { opacity: 0; transform: translateY(-12px) scale(.92); }
+}
+
+@keyframes level-transition-visibility {
+  0%,100% { visibility: hidden; }
+  1%,99% { visibility: visible; }
+}
+
+@media (max-width:500px) {
+  .level-transition__card { width: min(82vw,310px); padding: 13px 18px 18px; border-width: 4px; border-radius: 28px; }
+  .level-transition__mascot { width: 92px; height: 92px; margin-top: -48px; }
+  .level-transition__card > span { font-size: .86rem; }
+  .level-transition__card > strong { font-size: 2.35rem; }
+  .level-transition__progress { gap: 4px; margin-top: 11px; }
+  .level-transition__progress i { width: 22px; height: 7px; }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .level-transition__panel,
+  .level-transition__card,
+  .level-transition { animation-timing-function: linear; }
+}

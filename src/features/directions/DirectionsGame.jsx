@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import LobbyMascot from '../../components/LobbyMascot.jsx'
 import LevelConfetti from '../../components/LevelConfetti.jsx'
+import LevelTransition from '../../components/LevelTransition.jsx'
 import { HintIcon, HomeIcon, RestartIcon, SoundIcon } from '../../components/UiIcons.jsx'
 import { isPageActive } from '../../utils/pageActivity.js'
 import { getBufferedAudio, rewindBufferedAudio } from '../../utils/audioPool.js'
@@ -186,6 +187,7 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
   const rabbitSpriteRef = useRef(null)
   const rabbitHopAnimationRef = useRef(null)
   const movementAudioFramesRef = useRef(new Set())
+  const hasPlayedOpeningHintRef = useRef(false)
   const level = LEVELS[levelIndex]
   const { guidePoints, nextPathDirection } = useMemo(() => {
     const guidePath = getGuidePath(position, level.goal, level.obstacles)
@@ -314,6 +316,15 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
       console.warn('No se pudo reproducir la pista de direcciones.')
     })
   }, [completed, levelSolved, muted, nextPathDirection])
+
+  useEffect(() => {
+    if (muted || hasPlayedOpeningHintRef.current || !isPageActive()) return undefined
+    const timer = window.setTimeout(() => {
+      hasPlayedOpeningHintRef.current = true
+      playDirectionHint()
+    }, 320)
+    return () => window.clearTimeout(timer)
+  }, [muted, playDirectionHint])
 
   const playDirectionButtonAudio = useCallback((direction) => {
     if (muted) return
@@ -498,6 +509,7 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
 
   return (
     <main className="directions-game">
+      <LevelTransition current={levelIndex + 1} total={TOTAL_LEVELS} />
       <header className="directions-header">
         <div className="directions-status">
           <img src={game.icon} alt="" />

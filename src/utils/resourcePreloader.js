@@ -36,6 +36,7 @@ const isLobbyAsset = (path) => (
   || path === 'sounds/return-to-lobby.mp3'
   || path === 'sounds/click.mp3'
   || path === 'sounds/hover.mp3'
+  || path === 'sounds/balloons/guide.mp3'
   || path.startsWith('sounds/guide-')
 )
 
@@ -70,6 +71,12 @@ const isGameAsset = (path, gameId) => {
     return path.startsWith('emotions/')
       || path.startsWith('backgrounds/classification-')
       || path.startsWith('sounds/emotions/')
+  }
+
+  if (gameId === 'cuenta-explota') {
+    return path.startsWith('balloons/')
+      || path.startsWith('backgrounds/balloons-')
+      || path.startsWith('sounds/balloons/')
   }
 
   return false
