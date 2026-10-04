@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { getBufferedAudio } from '../utils/audioPool.js'
+import { setAudioVolume } from '../utils/audioSettings.js'
 
 function useLobbyNarration({ cueId, source, shouldPlay, volume = 0.9, rememberPlayed = true }) {
   const [isPlaying, setIsPlaying] = useState(false)
@@ -13,7 +14,7 @@ function useLobbyNarration({ cueId, source, shouldPlay, volume = 0.9, rememberPl
 
     const audio = getBufferedAudio(source)
     let active = true
-    audio.volume = volume
+    setAudioVolume(audio, 'voices', volume)
 
     const removeUnlockListeners = () => {
       window.removeEventListener('pointerdown', retryAfterInteraction, true)

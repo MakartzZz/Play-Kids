@@ -6,6 +6,7 @@ import { HintIcon, HomeIcon, RestartIcon, SoundIcon } from '../../components/UiI
 import { playCorrect, playLevelComplete, playMiss } from '../../hooks/useInterfaceSounds.js'
 import { isPageActive } from '../../utils/pageActivity.js'
 import { getBufferedAudio } from '../../utils/audioPool.js'
+import { setAudioVolume } from '../../utils/audioSettings.js'
 import appleGroupSound from '../../assets/sounds/numbers/groups/apple.mp3'
 import backpackGroupSound from '../../assets/sounds/numbers/groups/backpack.mp3'
 import ballGroupSound from '../../assets/sounds/numbers/groups/ball.mp3'
@@ -144,7 +145,7 @@ function NumbersGame({ game, muted, onToggleSound, onBack }) {
     }
     const createNarrationAudio = (source) => {
       const audio = getBufferedAudio(source)
-      audio.volume = 0.9
+      setAudioVolume(audio, 'voices', 0.9)
       audio.addEventListener('play', handlePlay)
       audio.addEventListener('ended', handleFinish)
       audio.addEventListener('error', handleFinish)

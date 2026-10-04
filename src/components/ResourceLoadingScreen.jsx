@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import LobbyMascot from './LobbyMascot.jsx'
 import LoadingTopicIdeas from './LoadingTopicIdeas.jsx'
 import { getBufferedAudio, rewindBufferedAudio } from '../utils/audioPool.js'
+import { setAudioVolume } from '../utils/audioSettings.js'
 import {
   getGameResources,
   getLobbyResources,
@@ -42,7 +43,7 @@ function ResourceLoadingScreen({ destination = 'game', game, muted = false, onCo
       if (!isLobbyDestination && game.introAudio && !muted) {
         introAudio = getBufferedAudio(game.introAudio)
         introAudioRef.current = introAudio
-        introAudio.volume = 0.9
+        setAudioVolume(introAudio, 'voices', 0.9)
         introAudio.addEventListener('ended', finishIntro)
         introAudio.addEventListener('error', finishIntro)
         rewindBufferedAudio(introAudio)

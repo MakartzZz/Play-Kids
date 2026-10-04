@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { configureBufferedAudio, getBufferedAudio } from '../utils/audioPool.js'
+import { setAudioVolume } from '../utils/audioSettings.js'
 
 function useBackgroundMusic(source, shouldPlay, volume = 0.18) {
   const audioRef = useRef(null)
@@ -13,7 +14,7 @@ function useBackgroundMusic(source, shouldPlay, volume = 0.18) {
   }, [source])
 
   useEffect(() => {
-    if (audioRef.current) audioRef.current.volume = volume
+    if (audioRef.current) setAudioVolume(audioRef.current, 'music', volume)
   }, [volume])
 
   useEffect(() => {
@@ -22,7 +23,7 @@ function useBackgroundMusic(source, shouldPlay, volume = 0.18) {
     if (!audio) return undefined
 
     if (shouldPlay) {
-      configureBufferedAudio(audio, { loop: true, volume })
+      configureBufferedAudio(audio, { loop: true, volume, channel: 'music' })
       audioRef.current = audio
     }
 

@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
-import lionAwake from '../assets/characters/playkids-lion-head.png'
-import lionBlink from '../assets/characters/playkids-lion-blink.png'
-import lionTalkSmall from '../assets/characters/playkids-lion-talk-small.png'
-import lionTalkWide from '../assets/characters/playkids-lion-talk-wide.png'
+import { memo, useEffect, useRef, useState } from 'react'
+import lionAwake from '../assets/characters/playkids-lion-head.webp'
+import lionBlink from '../assets/characters/playkids-lion-blink.webp'
+import lionTalkSmall from '../assets/characters/playkids-lion-talk-small.webp'
+import lionTalkWide from '../assets/characters/playkids-lion-talk-wide.webp'
 
 const FIRST_BLINK_DELAY = 1800
 const BLINK_DURATION = 220
@@ -78,4 +78,4 @@ function LobbyMascot({ talking = false, className = '' }) {
   )
 }
 
-export default LobbyMascot
+export default memo(LobbyMascot)

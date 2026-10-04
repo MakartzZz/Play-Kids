@@ -1,7 +1,7 @@
 import { prepareBufferedAudio, releaseBufferedAudio } from './audioPool.js'
 
 const assetModules = import.meta.glob([
-  '../assets/**/*.{png,jpg,jpeg,webp,svg,mp3}',
+  '../assets/**/*.{jpg,jpeg,webp,svg,mp3}',
   '!../assets/tutorials/**',
 ], {
   eager: true,
@@ -56,7 +56,7 @@ const isGameAsset = (path, gameId) => {
   }
 
   if (gameId === 'numeros') {
-    return path === 'classification/object-sprites.png'
+    return path === 'classification/object-sprites.webp'
       || path.startsWith('backgrounds/classification-')
       || path.startsWith('sounds/numbers/')
   }

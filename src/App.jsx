@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import GameLobby from './components/GameLobby.jsx'
 import GamePlaceholder from './components/GamePlaceholder.jsx'
 import IntroScreen from './components/IntroScreen.jsx'
 import ResourceLoadingScreen from './components/ResourceLoadingScreen.jsx'
+import SettingsScreen from './components/SettingsScreen.jsx'
 import BalloonsGame from './features/balloons/BalloonsGame.jsx'
 import ClassificationGame from './features/classification/ClassificationGame.jsx'
 import DirectionsGame from './features/directions/DirectionsGame.jsx'
@@ -14,6 +15,7 @@ import { lobbyMedia } from './config/media.js'
 import useBackgroundMusic from './hooks/useBackgroundMusic.js'
 import useInterfaceSounds from './hooks/useInterfaceSounds.js'
 import useLobbyNarration from './hooks/useLobbyNarration.js'
+import { getAudioSettings, updateAudioSetting } from './utils/audioSettings.js'
 
 function App() {
   const [screen, setScreen] = useState('intro')
@@ -21,9 +23,32 @@ function App() {
   const [muted, setMuted] = useState(false)
   const [lobbyEntry, setLobbyEntry] = useState({ type: 'appStart', visit: 0 })
   const [isGuideNarrationPlaying, setIsGuideNarrationPlaying] = useState(false)
+  const [audioSettings, setAudioSettings] = useState(getAudioSettings)
+  const [installPrompt, setInstallPrompt] = useState(null)
+  const [installed, setInstalled] = useState(() => (
+    window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
+  ))
+
+  useEffect(() => {
+    const handleInstallPrompt = (event) => {
+      event.preventDefault()
+      setInstallPrompt(event)
+    }
+    const handleInstalled = () => {
+      setInstalled(true)
+      setInstallPrompt(null)
+    }
+
+    window.addEventListener('beforeinstallprompt', handleInstallPrompt)
+    window.addEventListener('appinstalled', handleInstalled)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleInstallPrompt)
+      window.removeEventListener('appinstalled', handleInstalled)
+    }
+  }, [])
 
   const narrationSource = lobbyMedia.narrationByEntry[lobbyEntry.type]
-  const isLobbyScreen = screen === 'lobby'
+  const isLobbyScreen = screen === 'lobby' || screen === 'settings'
   const isGameScreen = screen === 'game' && Boolean(selectedGame)
   const backgroundMusicSource = isGameScreen ? selectedGame.musicSource : lobbyMedia.musicSource
   const isLobbyNarrationPlaying = useLobbyNarration({
@@ -53,6 +78,17 @@ function App() {
   const returnToLobby = () => {
     setLobbyEntry((current) => ({ type: 'gameReturn', visit: current.visit + 1 }))
     setScreen('lobby-loading')
+  }
+
+  const changeAudioSetting = (channel, value) => {
+    setAudioSettings(updateAudioSetting(channel, value))
+  }
+
+  const installApp = async () => {
+    if (!installPrompt) return
+    await installPrompt.prompt()
+    const choice = await installPrompt.userChoice
+    if (choice.outcome === 'accepted') setInstallPrompt(null)
   }
 
   if (screen === 'intro') {
@@ -150,12 +186,26 @@ function App() {
     return <GamePlaceholder game={selectedGame} onBack={returnToLobby} />
   }
 
+  if (screen === 'settings') {
+    return (
+      <SettingsScreen
+        audioSettings={audioSettings}
+        installed={installed}
+        installAvailable={Boolean(installPrompt)}
+        onAudioChange={changeAudioSetting}
+        onBack={() => setScreen('lobby')}
+        onInstall={installApp}
+      />
+    )
+  }
+
   return (
     <GameLobby
       entryType={lobbyEntry.type}
       isNarrating={isLobbyNarrationPlaying}
       muted={muted}
       onGuideNarrationChange={setIsGuideNarrationPlaying}
+      onOpenSettings={() => setScreen('settings')}
       onToggleSound={() => setMuted((current) => !current)}
       onSelectGame={openGame}
     />

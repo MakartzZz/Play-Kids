@@ -1,4 +1,4 @@
-import playKidsWordmark from '../assets/branding/playkids-wordmark.png'
+import playKidsWordmark from '../assets/branding/playkids-wordmark.webp'
 
 function BrandLogo({ compact = false }) {
   return (

@@ -5,12 +5,13 @@ import LevelTransition from '../../components/LevelTransition.jsx'
 import { HintIcon, HomeIcon, RestartIcon, SoundIcon } from '../../components/UiIcons.jsx'
 import { isPageActive } from '../../utils/pageActivity.js'
 import { getBufferedAudio, rewindBufferedAudio } from '../../utils/audioPool.js'
-import rabbitSprite from '../../assets/directions/rabbit.png'
-import rabbitBlinkSprite from '../../assets/directions/rabbit-blink.png'
-import burrowSprite from '../../assets/directions/burrow.png'
-import rockSprite from '../../assets/directions/rock.png'
-import bushSprite from '../../assets/directions/bush.png'
-import movementArrow from '../../assets/directions/movement-arrow.png'
+import { setAudioVolume } from '../../utils/audioSettings.js'
+import rabbitSprite from '../../assets/directions/rabbit.webp'
+import rabbitBlinkSprite from '../../assets/directions/rabbit-blink.webp'
+import burrowSprite from '../../assets/directions/burrow.webp'
+import rockSprite from '../../assets/directions/rock.webp'
+import bushSprite from '../../assets/directions/bush.webp'
+import movementArrow from '../../assets/directions/movement-arrow.webp'
 import downButtonSound from '../../assets/sounds/directions/buttons/down.mp3'
 import leftButtonSound from '../../assets/sounds/directions/buttons/left.mp3'
 import rightButtonSound from '../../assets/sounds/directions/buttons/right.mp3'
@@ -148,6 +149,10 @@ const BOARD_TILES = Array.from({ length: BOARD_COLUMNS * BOARD_ROWS }, (_, index
   <i className={`directions-tile directions-tile--${getTileType(index)}`} key={index} />
 ))
 
+const BoardTiles = memo(function BoardTiles() {
+  return <div className="directions-board__tiles" aria-hidden="true">{BOARD_TILES}</div>
+})
+
 const ArrowIcon = memo(function ArrowIcon({ direction }) {
   const rotations = { up: 0, right: 90, down: 180, left: -90 }
   return <img className="direction-button__arrow" src={movementArrow} alt="" aria-hidden="true" style={{ transform: `rotate(${rotations[direction]}deg)` }} />
@@ -200,7 +205,7 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
   useEffect(() => {
     const sounds = [jumpSoundOne, jumpSoundTwo].map((source) => {
       const audio = getBufferedAudio(source)
-      audio.volume = 0.62
+      setAudioVolume(audio, 'effects', 0.62)
       return audio
     })
     jumpSoundsRef.current = sounds
@@ -217,7 +222,7 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
     }
     const createNarrationAudio = (source) => {
       const audio = getBufferedAudio(source)
-      audio.volume = 0.9
+      setAudioVolume(audio, 'voices', 0.9)
       audio.addEventListener('play', handleHintPlay)
       audio.addEventListener('ended', handleHintFinish)
       audio.addEventListener('error', handleHintFinish)
@@ -554,15 +559,10 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
         </div>
 
         <div className="directions-board" aria-label="Camino hacia la madriguera">
-          {BOARD_TILES}
+          <BoardTiles />
           <svg className="directions-guide-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-              <marker id="directions-path-arrow" markerWidth="4" markerHeight="4" refX="3" refY="2" orient="auto" markerUnits="strokeWidth">
-                <path d="M0,0 L4,2 L0,4 Z" />
-              </marker>
-            </defs>
             <polyline className="directions-guide-path__halo" points={guidePoints} />
-            <polyline className="directions-guide-path__line" points={guidePoints} markerEnd="url(#directions-path-arrow)" />
+            <polyline className="directions-guide-path__line" points={guidePoints} />
           </svg>
           {level.obstacles.map((obstacle) => (
             <span className="directions-position" style={getCellStyle(obstacle)} key={`${obstacle.x}-${obstacle.y}`}>

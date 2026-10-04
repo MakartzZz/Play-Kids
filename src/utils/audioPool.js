@@ -1,3 +1,5 @@
+import { setAudioVolume } from './audioSettings.js'
+
 const audioPool = new Map()
 const audioPreparationPool = new Map()
 
@@ -13,10 +15,10 @@ export const getBufferedAudio = (source) => {
   return audioPool.get(source)
 }
 
-export const configureBufferedAudio = (audio, { loop, volume }) => {
+export const configureBufferedAudio = (audio, { loop, volume, channel = 'effects' }) => {
   if (!audio) return
   audio.loop = loop
-  audio.volume = volume
+  setAudioVolume(audio, channel, volume)
 }
 
 export const rewindBufferedAudio = (audio) => {

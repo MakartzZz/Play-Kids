@@ -6,6 +6,7 @@ import { HintIcon, HomeIcon, RestartIcon, SoundIcon } from '../../components/UiI
 import { playCorrect, playLevelComplete, playMiss } from '../../hooks/useInterfaceSounds.js'
 import { isPageActive } from '../../utils/pageActivity.js'
 import { getBufferedAudio } from '../../utils/audioPool.js'
+import { setAudioVolume } from '../../utils/audioSettings.js'
 import patternsErrorSound from '../../assets/sounds/patterns/feedback/error.mp3'
 import patternsHintSound from '../../assets/sounds/patterns/hints/general.mp3'
 import circleSound1 from '../../assets/sounds/patterns/shapes/circle-1.mp3'
@@ -19,11 +20,11 @@ import starSound2 from '../../assets/sounds/patterns/shapes/star-2.mp3'
 import triangleSound1 from '../../assets/sounds/patterns/shapes/triangle-1.mp3'
 import triangleSound2 from '../../assets/sounds/patterns/shapes/triangle-2.mp3'
 import doYouKnowSound from '../../assets/sounds/patterns/prompts/do-you-know.mp3'
-import starImage from '../../assets/patterns/star-red.png'
-import circleImage from '../../assets/patterns/circle-blue.png'
-import triangleImage from '../../assets/patterns/triangle-yellow.png'
-import squareImage from '../../assets/patterns/square-green.png'
-import heartImage from '../../assets/patterns/heart-purple.png'
+import starImage from '../../assets/patterns/star-red.webp'
+import circleImage from '../../assets/patterns/circle-blue.webp'
+import triangleImage from '../../assets/patterns/triangle-yellow.webp'
+import squareImage from '../../assets/patterns/square-green.webp'
+import heartImage from '../../assets/patterns/heart-purple.webp'
 import './patterns.css'
 
 const INSTRUCTION = 'Observa la secuencia y elige la figura que continúa.'
@@ -123,7 +124,7 @@ function PatternsGame({ game, muted, onToggleSound, onBack }) {
   useEffect(() => {
     const createNarrationAudio = (source) => {
       const audio = getBufferedAudio(source)
-      audio.volume = 0.9
+      setAudioVolume(audio, 'voices', 0.9)
       return audio
     }
     const hintAudio = createNarrationAudio(patternsHintSound)

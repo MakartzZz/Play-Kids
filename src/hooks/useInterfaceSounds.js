@@ -5,6 +5,7 @@ import clickSound from '../assets/sounds/click.mp3'
 import correctSound from '../assets/sounds/correct.mp3'
 import missSound from '../assets/sounds/miss.mp3'
 import { getBufferedAudio } from '../utils/audioPool.js'
+import { setAudioVolume } from '../utils/audioSettings.js'
 
 const LEVEL_COMPLETE_EVENT = 'playkids:level-complete'
 const CORRECT_EVENT = 'playkids:correct'
@@ -35,7 +36,7 @@ function useInterfaceSounds(muted) {
       const audio = getBufferedAudio(source)
       if (!audio) return
 
-      audio.volume = volume
+      setAudioVolume(audio, 'effects', volume)
       audio.pause()
       if (audio.readyState > HTMLMediaElement.HAVE_NOTHING) audio.currentTime = 0
       void audio.play().catch(() => {

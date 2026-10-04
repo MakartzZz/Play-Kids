@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { introMedia } from '../config/media.js'
-import tapHandPressed from '../assets/ui/tap-hand-pressed.png'
-import tapHandRaised from '../assets/ui/tap-hand-raised.png'
+import tapHandPressed from '../assets/ui/tap-hand-pressed.webp'
+import tapHandRaised from '../assets/ui/tap-hand-raised.webp'
 import { checkForAppUpdate } from '../utils/appUpdater.js'
 import { getBufferedAudio } from '../utils/audioPool.js'
+import { setAudioVolume } from '../utils/audioSettings.js'
 import { getLobbyResources, preloadResources } from '../utils/resourcePreloader.js'
 import BrandLogo from './BrandLogo.jsx'
 import IntroMascot from './IntroMascot.jsx'
@@ -53,7 +54,7 @@ function IntroScreen({ onComplete }) {
         const audio = audioRef.current ?? getBufferedAudio(introMedia.soundSource)
         audioRef.current = audio
         audio.preload = 'auto'
-        audio.volume = 0.35
+        setAudioVolume(audio, 'effects', 0.35)
 
         try {
           audio.currentTime = 0

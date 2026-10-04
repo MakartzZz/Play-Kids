@@ -1,11 +1,11 @@
-import objectSprites from '../assets/classification/object-sprites.png'
-import movementArrow from '../assets/directions/movement-arrow.png'
-import happyEmotion from '../assets/emotions/happy.png'
-import sadEmotion from '../assets/emotions/sad.png'
-import surprisedEmotion from '../assets/emotions/surprised.png'
-import circlePattern from '../assets/patterns/circle-blue.png'
-import starPattern from '../assets/patterns/star-red.png'
-import balloonSprites from '../assets/balloons/balloon-sprites.png'
+import objectSprites from '../assets/classification/object-sprites.webp'
+import movementArrow from '../assets/directions/movement-arrow.webp'
+import happyEmotion from '../assets/emotions/happy.webp'
+import sadEmotion from '../assets/emotions/sad.webp'
+import surprisedEmotion from '../assets/emotions/surprised.webp'
+import circlePattern from '../assets/patterns/circle-blue.webp'
+import starPattern from '../assets/patterns/star-red.webp'
+import balloonSprites from '../assets/balloons/balloon-sprites.webp'
 
 const classificationIdeas = [
   { position: '0% 0%' },

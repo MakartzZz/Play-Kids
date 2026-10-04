@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import LobbyMascot from '../../components/LobbyMascot.jsx'
 import LevelConfetti from '../../components/LevelConfetti.jsx'
 import LevelTransition from '../../components/LevelTransition.jsx'
@@ -6,6 +6,7 @@ import { HintIcon, HomeIcon, RestartIcon, SoundIcon } from '../../components/UiI
 import { playCorrect, playLevelComplete, playMiss } from '../../hooks/useInterfaceSounds.js'
 import { isPageActive } from '../../utils/pageActivity.js'
 import { getBufferedAudio } from '../../utils/audioPool.js'
+import { setAudioVolume } from '../../utils/audioSettings.js'
 import blueBoxSound from '../../assets/sounds/classification/boxes/blue.mp3'
 import brownBoxSound from '../../assets/sounds/classification/boxes/brown.mp3'
 import greenBoxSound from '../../assets/sounds/classification/boxes/green.mp3'
@@ -126,9 +127,9 @@ const shuffled = (items) => {
   return result
 }
 
-function ObjectSprite({ sprite, small = false }) {
+const ObjectSprite = memo(function ObjectSprite({ sprite, small = false }) {
   return <i className={`sorting-sprite sorting-sprite--${sprite} ${small ? 'is-small' : ''}`} />
-}
+})
 
 function ClassificationGame({ game, muted, onToggleSound, onBack }) {
   const [round, setRound] = useState(1)
@@ -179,7 +180,7 @@ function ClassificationGame({ game, muted, onToggleSound, onBack }) {
     }
     const createNarrationAudio = (source) => {
       const audio = getBufferedAudio(source)
-      audio.volume = 0.9
+      setAudioVolume(audio, 'voices', 0.9)
       audio.addEventListener('play', handlePlay)
       audio.addEventListener('ended', handleFinish)
       audio.addEventListener('error', handleFinish)

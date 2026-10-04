@@ -6,16 +6,17 @@ import { HomeIcon, RestartIcon, SoundIcon } from '../../components/UiIcons.jsx'
 import { playCorrect, playLevelComplete, playMiss } from '../../hooks/useInterfaceSounds.js'
 import { isPageActive } from '../../utils/pageActivity.js'
 import { getBufferedAudio } from '../../utils/audioPool.js'
-import happyFace from '../../assets/emotions/happy.png'
-import sadFace from '../../assets/emotions/sad.png'
-import angryFace from '../../assets/emotions/angry.png'
-import scaredFace from '../../assets/emotions/scared.png'
-import surprisedFace from '../../assets/emotions/surprised.png'
-import happySituation from '../../assets/emotions/situation-happy.png'
-import sadSituation from '../../assets/emotions/situation-sad.png'
-import angrySituation from '../../assets/emotions/situation-angry.png'
-import scaredSituation from '../../assets/emotions/situation-scared.png'
-import surprisedSituation from '../../assets/emotions/situation-surprised.png'
+import { setAudioVolume } from '../../utils/audioSettings.js'
+import happyFace from '../../assets/emotions/happy.webp'
+import sadFace from '../../assets/emotions/sad.webp'
+import angryFace from '../../assets/emotions/angry.webp'
+import scaredFace from '../../assets/emotions/scared.webp'
+import surprisedFace from '../../assets/emotions/surprised.webp'
+import happySituation from '../../assets/emotions/situation-happy.webp'
+import sadSituation from '../../assets/emotions/situation-sad.webp'
+import angrySituation from '../../assets/emotions/situation-angry.webp'
+import scaredSituation from '../../assets/emotions/situation-scared.webp'
+import surprisedSituation from '../../assets/emotions/situation-surprised.webp'
 import happyStorySound from '../../assets/sounds/emotions/stories/happy.mp3'
 import sadStorySound from '../../assets/sounds/emotions/stories/sad.mp3'
 import angryStorySound from '../../assets/sounds/emotions/stories/angry.mp3'
@@ -114,7 +115,7 @@ function EmotionsGame({ game, muted, onToggleSound, onBack }) {
     }
     const createNarrationAudio = (source) => {
       const audio = getBufferedAudio(source)
-      audio.volume = 0.9
+      setAudioVolume(audio, 'voices', 0.9)
       audio.addEventListener('play', handlePlay)
       audio.addEventListener('ended', handleFinish)
       audio.addEventListener('error', handleFinish)

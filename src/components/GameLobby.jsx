@@ -3,6 +3,7 @@ import { minigames } from '../data/minigames.js'
 import useLobbyNarration from '../hooks/useLobbyNarration.js'
 import { isPageActive } from '../utils/pageActivity.js'
 import LobbyMascot from './LobbyMascot.jsx'
+import HoldSettingsButton from './HoldSettingsButton.jsx'
 import { SoundIcon } from './UiIcons.jsx'
 
 const HELP_IDLE_DELAY = 15000
@@ -27,6 +28,7 @@ function GameLobby({
   isNarrating,
   muted,
   onGuideNarrationChange,
+  onOpenSettings,
   onToggleSound,
   onSelectGame,
 }) {
@@ -103,6 +105,7 @@ function GameLobby({
   return (
     <main className="lobby">
       <header className="lobby-header">
+        <HoldSettingsButton onOpen={onOpenSettings} />
         <button
           type="button"
           className="round-button round-button--sound"

@@ -4,7 +4,7 @@
   min-height: 100svh;
   min-height: 100dvh;
   overflow-x: hidden;
-  background: #91ddfa url('../../assets/backgrounds/patterns-desktop.png') center top / cover no-repeat;
+  background: #91ddfa url('../../assets/backgrounds/patterns-desktop.webp') center top / cover no-repeat;
 }
 
 .patterns-header {
@@ -69,7 +69,7 @@
 .patterns-complete button svg { width: 40px; height: 40px; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 
 @media (max-width: 719px) {
-  .patterns-game { background-image: url('../../assets/backgrounds/patterns-mobile.png'); }
+  .patterns-game { background-image: url('../../assets/backgrounds/patterns-mobile.webp'); }
   .patterns-header { grid-template-columns: minmax(0,1fr) auto; column-gap: 8px; min-height: 58px; padding: calc(5px + env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) 3px max(10px,env(safe-area-inset-left)); }
   .patterns-status { grid-column: 1; grid-row: 1; justify-self: start; width: min(180px,100%); min-width: 0; gap: 7px; padding: 4px 10px; }
   .patterns-status img { width: 32px; height: 32px; }
@@ -102,7 +102,7 @@
 
 @media (min-width: 720px) and (orientation: portrait) {
   .patterns-game {
-    background-image: url('../../assets/backgrounds/patterns-tablet-portrait.png');
+    background-image: url('../../assets/backgrounds/patterns-tablet-portrait.webp');
   }
 
   .patterns-stage {
@@ -224,7 +224,7 @@
 
 @media (min-width: 720px) and (orientation: landscape) and (pointer: coarse) {
   .patterns-game {
-    background-image: url('../../assets/backgrounds/patterns-tablet.png');
+    background-image: url('../../assets/backgrounds/patterns-tablet.webp');
   }
 
   .patterns-stage {

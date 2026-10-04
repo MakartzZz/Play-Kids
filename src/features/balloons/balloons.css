@@ -5,7 +5,7 @@
   min-height: 100svh;
   min-height: 100dvh;
   overflow: hidden;
-  background: #62c8f0 url('../../assets/backgrounds/balloons-landscape.png') center / cover no-repeat;
+  background: #62c8f0 url('../../assets/backgrounds/balloons-landscape.webp') center / cover no-repeat;
   color: #173b74;
 }
 
@@ -151,7 +151,7 @@
 @keyframes balloon-feedback-in { from { opacity: 0; transform: translate(-50%,-10px) scale(.92); } }
 
 @media (max-width:719px) {
-  .balloons-game { background-image: url('../../assets/backgrounds/balloons-portrait.png'); }
+  .balloons-game { background-image: url('../../assets/backgrounds/balloons-portrait.webp'); }
   .balloons-header { min-height: 58px; padding: calc(4px + env(safe-area-inset-top)) 10px 3px; }
   .balloons-status { gap: 6px; padding: 4px 8px 4px 5px; border-width: 2px; border-radius: 18px; }
   .balloons-status > img { width: 34px; height: 34px; }

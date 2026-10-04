@@ -4,7 +4,7 @@
   min-height: 100svh;
   min-height: 100dvh;
   overflow-x: hidden;
-  background: #83d6f8 url('../../assets/backgrounds/classification-tablet.png') center top / cover no-repeat;
+  background: #83d6f8 url('../../assets/backgrounds/classification-tablet.webp') center top / cover no-repeat;
 }
 
 .numbers-header {
@@ -183,7 +183,7 @@
 }
 
 .number-objects.is-small { max-width: 130px; }
-.number-sprite { display: block; flex: 0 0 auto; width: clamp(34px, 4.8vw, 58px); max-width: 33.333%; aspect-ratio: 1; background: url('../../assets/classification/object-sprites.png') var(--sprite-x) var(--sprite-y) / 400% 400% no-repeat; filter: drop-shadow(0 4px 3px rgba(75, 42, 20, .24)); }
+.number-sprite { display: block; flex: 0 0 auto; width: clamp(34px, 4.8vw, 58px); max-width: 33.333%; aspect-ratio: 1; background: url('../../assets/classification/object-sprites.webp') var(--sprite-x) var(--sprite-y) / 400% 400% no-repeat; filter: drop-shadow(0 4px 3px rgba(75, 42, 20, .24)); }
 .number-objects.is-small .number-sprite { width: clamp(28px, 4vw, 48px); }
 .number-sprite--apple { --sprite-x: 0%; --sprite-y: 0%; }
 .number-sprite--fire-truck { --sprite-x: 33.333%; --sprite-y: 0%; }
@@ -214,7 +214,7 @@
 @keyframes number-target-ready { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.025); box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 18%, transparent); } }
 
 @media (max-width: 719px) {
-  .numbers-game { background-image: url('../../assets/backgrounds/classification-mobile.png'); }
+  .numbers-game { background-image: url('../../assets/backgrounds/classification-mobile.webp'); }
   .numbers-header { grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; min-height: 58px; padding: calc(5px + env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) 3px max(10px, env(safe-area-inset-left)); }
   .numbers-status { grid-column: 1; grid-row: 1; justify-self: start; width: min(180px, 100%); min-width: 0; gap: 7px; padding: 4px 10px; }
   .numbers-status img { width: 32px; height: 32px; }

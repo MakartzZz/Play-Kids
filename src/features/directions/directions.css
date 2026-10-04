@@ -5,7 +5,7 @@
   min-height: 100dvh;
   overflow-x: hidden;
   background-color: #94daf6;
-  background-image: url('../../assets/backgrounds/directions-tablet.png');
+  background-image: url('../../assets/backgrounds/directions-tablet.webp');
   background-position: center top;
   background-repeat: no-repeat;
   background-size: cover;
@@ -153,17 +153,28 @@
 
 .directions-board {
   position: relative;
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
   width: min(100%, 980px);
   aspect-ratio: 2 / 1;
   overflow: visible;
+  isolation: isolate;
+}
+
+.directions-board__tiles {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  pointer-events: none;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .directions-tile {
   position: relative;
   z-index: 1;
-  background-image: url('../../assets/directions/path-tiles.png');
+  background-image: url('../../assets/directions/path-tiles.webp');
   background-repeat: no-repeat;
   background-size: 300% 300%;
   background-position: var(--tile-x) var(--tile-y);
@@ -189,6 +200,8 @@
   height: 100%;
   overflow: visible;
   pointer-events: none;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .directions-guide-path polyline {
@@ -208,10 +221,6 @@
   stroke-width: 5;
   stroke-dasharray: 12 10;
   animation: directions-path-flow 1.15s linear infinite;
-}
-
-.directions-guide-path marker path {
-  fill: #2f80ed;
 }
 
 .directions-position {
@@ -425,7 +434,7 @@
 
 @media (min-width: 720px) and (orientation: portrait) {
   .directions-game {
-    background-image: url('../../assets/backgrounds/directions-tablet-portrait.png');
+    background-image: url('../../assets/backgrounds/directions-tablet-portrait.webp');
   }
 
   .directions-stage {
@@ -474,7 +483,7 @@
 
 @media (max-width: 719px) {
   .directions-game {
-    background-image: url('../../assets/backgrounds/directions-mobile.png');
+    background-image: url('../../assets/backgrounds/directions-mobile.webp');
   }
 
   .directions-header {
@@ -805,7 +814,7 @@
 
 @media (min-width: 1300px) and (min-height: 900px) and (orientation: landscape) and (pointer: coarse) {
   .directions-game {
-    background-image: url('../../assets/backgrounds/directions-ipad-pro.png');
+    background-image: url('../../assets/backgrounds/directions-ipad-pro.webp');
   }
 
   .directions-stage {

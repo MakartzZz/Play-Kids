@@ -1,5 +1,5 @@
-import lionAwake from '../assets/characters/playkids-lion-head.png'
-import lionBlink from '../assets/characters/playkids-lion-blink.png'
+import lionAwake from '../assets/characters/playkids-lion-head.webp'
+import lionBlink from '../assets/characters/playkids-lion-blink.webp'
 
 function IntroMascot({ awake }) {
   return (

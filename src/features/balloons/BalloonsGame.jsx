@@ -3,8 +3,9 @@ import LevelConfetti from '../../components/LevelConfetti.jsx'
 import LevelTransition from '../../components/LevelTransition.jsx'
 import LobbyMascot from '../../components/LobbyMascot.jsx'
 import { HintIcon, HomeIcon, RestartIcon, SoundIcon } from '../../components/UiIcons.jsx'
+import { setAudioVolume } from '../../utils/audioSettings.js'
 import { playLevelComplete } from '../../hooks/useInterfaceSounds.js'
-import balloonSprites from '../../assets/balloons/balloon-sprites.png'
+import balloonSprites from '../../assets/balloons/balloon-sprites.webp'
 import {
   balloonCompleteAudios,
   balloonCountAudios,
@@ -116,7 +117,7 @@ function BalloonsGame({ game, muted, onToggleSound, onBack }) {
   const playEffect = useCallback((source, { varied = false, volume = 0.78 } = {}) => {
     if (muted || !source) return
     const audio = new Audio(source)
-    audio.volume = varied ? volume * (0.9 + Math.random() * 0.16) : volume
+    setAudioVolume(audio, 'effects', varied ? volume * (0.9 + Math.random() * 0.16) : volume, false)
     if (varied) {
       audio.playbackRate = 0.9 + Math.random() * 0.2
       if ('preservesPitch' in audio) audio.preservesPitch = false
@@ -170,7 +171,7 @@ function BalloonsGame({ game, muted, onToggleSound, onBack }) {
     const createAudio = (source) => {
       const audio = new Audio(source)
       audio.preload = 'auto'
-      audio.volume = 0.9
+      setAudioVolume(audio, 'voices', 0.9)
       audio.load()
       return audio
     }

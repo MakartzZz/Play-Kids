@@ -5,7 +5,7 @@
   min-height: 100dvh;
   overflow-x: hidden;
   background-color: #82d5fa;
-  background-image: url('../../assets/backgrounds/classification-tablet.png');
+  background-image: url('../../assets/backgrounds/classification-tablet.webp');
   background-position: center top;
   background-repeat: no-repeat;
   background-size: cover;
@@ -300,10 +300,12 @@
   display: block;
   width: 88%;
   aspect-ratio: 1;
-  background-image: url('../../assets/classification/object-sprites.png');
+  background-image: url('../../assets/classification/object-sprites.webp');
   background-repeat: no-repeat;
   background-size: 400% 400%;
   background-position: var(--sprite-x) var(--sprite-y);
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .sorting-sprite--apple { --sprite-x: 0%; --sprite-y: 0%; }
@@ -430,7 +432,7 @@
 
 @media (max-width: 719px) {
   .classification-game {
-    background-image: url('../../assets/backgrounds/classification-mobile.png');
+    background-image: url('../../assets/backgrounds/classification-mobile.webp');
     background-position: center top;
   }
 
