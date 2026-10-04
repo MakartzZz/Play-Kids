@@ -4,6 +4,7 @@ import LevelTransition from '../../components/LevelTransition.jsx'
 import LobbyMascot from '../../components/LobbyMascot.jsx'
 import { HintIcon, HomeIcon, RestartIcon, SoundIcon } from '../../components/UiIcons.jsx'
 import { setAudioVolume } from '../../utils/audioSettings.js'
+import { getBufferedAudio, rewindBufferedAudio } from '../../utils/audioPool.js'
 import { playLevelComplete } from '../../hooks/useInterfaceSounds.js'
 import balloonSprites from '../../assets/balloons/balloon-sprites.webp'
 import {
@@ -72,6 +73,7 @@ function BalloonsGame({ game, muted, onToggleSound, onBack }) {
   const [feedback, setFeedback] = useState(null)
   const [hinted, setHinted] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
+  const [isLevelTransitioning, setIsLevelTransitioning] = useState(false)
   const lockedRef = useRef(false)
   const advanceTimerRef = useRef(null)
   const feedbackTimerRef = useRef(null)
@@ -89,6 +91,7 @@ function BalloonsGame({ game, muted, onToggleSound, onBack }) {
   const lastErrorIndexRef = useRef(null)
   const errorNarrationLockedRef = useRef(false)
   const errorNarrationTimerRef = useRef(null)
+  const soundOrderTimerRef = useRef(null)
   const activeEffectsRef = useRef(new Set())
   const level = LEVELS[levelIndex]
 
@@ -99,6 +102,7 @@ function BalloonsGame({ game, muted, onToggleSound, onBack }) {
     window.clearTimeout(hintTimerRef.current)
     window.clearTimeout(promptTimerRef.current)
     window.clearTimeout(errorNarrationTimerRef.current)
+    window.clearTimeout(soundOrderTimerRef.current)
   }, [])
 
   const stopNarration = useCallback(() => {
@@ -115,8 +119,9 @@ function BalloonsGame({ game, muted, onToggleSound, onBack }) {
   }, [])
 
   const playEffect = useCallback((source, { varied = false, volume = 0.78 } = {}) => {
-    if (muted || !source) return
-    const audio = new Audio(source)
+    if (muted || !source) return Promise.resolve(false)
+    const audio = getBufferedAudio(source)
+    rewindBufferedAudio(audio)
     setAudioVolume(audio, 'effects', varied ? volume * (0.9 + Math.random() * 0.16) : volume, false)
     if (varied) {
       audio.playbackRate = 0.9 + Math.random() * 0.2
@@ -130,7 +135,12 @@ function BalloonsGame({ game, muted, onToggleSound, onBack }) {
     audio.addEventListener('ended', release)
     audio.addEventListener('error', release)
     activeEffectsRef.current.add(audio)
-    void audio.play().catch(release)
+    return audio.play()
+      .then(() => true)
+      .catch(() => {
+        release()
+        return false
+      })
   }, [muted])
 
   const playNarration = useCallback((audio, onFinished) => {
@@ -219,21 +229,21 @@ function BalloonsGame({ game, muted, onToggleSound, onBack }) {
   }, [phase, showHint])
 
   useEffect(() => {
-    if (phase !== 'playing') return undefined
+    if (phase !== 'playing' || isLevelTransitioning) return undefined
     const spawnTimer = window.setInterval(() => {
       setBalloons((current) => current.length >= 7 ? current : [...current, createBalloon(level)])
     }, 850)
     return () => window.clearInterval(spawnTimer)
-  }, [level, phase])
+  }, [isLevelTransitioning, level, phase])
 
   useEffect(() => {
     window.clearTimeout(promptTimerRef.current)
-    if (phase !== 'playing') return undefined
+    if (phase !== 'playing' || isLevelTransitioning) return undefined
     promptTimerRef.current = window.setTimeout(() => {
       playNarration(promptAudioRefs.current[levelIndex])
     }, 320)
     return () => window.clearTimeout(promptTimerRef.current)
-  }, [levelIndex, phase, playNarration])
+  }, [isLevelTransitioning, levelIndex, phase, playNarration])
 
   useEffect(() => {
     const restart = () => restartHintTimer()
@@ -271,6 +281,8 @@ function BalloonsGame({ game, muted, onToggleSound, onBack }) {
           playNarration(gameCompleteAudioRef.current)
         } else {
           const nextLevelIndex = levelIndex + 1
+          stopNarration()
+          setIsLevelTransitioning(true)
           setLevelIndex(nextLevelIndex)
           setProgress(0)
           setFeedback(null)
@@ -319,13 +331,16 @@ function BalloonsGame({ game, muted, onToggleSound, onBack }) {
     const nextProgress = progress + 1
     setProgress(nextProgress)
     setFeedback(`¡${nextProgress}!`)
-    playEffect(choose(balloonPopEffects), { varied: true, volume: 0.82 })
+    const popPlayback = playEffect(choose(balloonPopEffects), { varied: true, volume: 0.82 })
     window.clearTimeout(feedbackTimerRef.current)
     feedbackTimerRef.current = window.setTimeout(() => setFeedback(null), 620)
     window.setTimeout(() => removeBalloon(balloon.id), 270)
-    if (nextProgress === level.count) {
-      finishLevel(nextProgress)
-    } else {
+    const continueAfterPop = () => {
+      if (nextProgress === level.count) {
+        finishLevel(nextProgress)
+        return
+      }
+
       window.clearTimeout(lockTimerRef.current)
       lockTimerRef.current = window.setTimeout(() => {
         lockedRef.current = false
@@ -337,6 +352,15 @@ function BalloonsGame({ game, muted, onToggleSound, onBack }) {
         }, muted ? 380 : 80)
       })
     }
+
+    if (muted) {
+      continueAfterPop()
+    } else {
+      void popPlayback.then(() => {
+        window.clearTimeout(soundOrderTimerRef.current)
+        soundOrderTimerRef.current = window.setTimeout(continueAfterPop, 70)
+      })
+    }
   }
 
   const restart = () => {
@@ -345,6 +369,7 @@ function BalloonsGame({ game, muted, onToggleSound, onBack }) {
     setProgress(0)
     setFeedback(null)
     setHinted(false)
+    setIsLevelTransitioning(false)
     lockedRef.current = false
     errorNarrationLockedRef.current = false
     stopNarration()
@@ -354,7 +379,11 @@ function BalloonsGame({ game, muted, onToggleSound, onBack }) {
 
   return (
     <main className="balloons-game">
-      <LevelTransition current={levelIndex + 1} total={LEVELS.length} />
+      <LevelTransition
+        current={levelIndex + 1}
+        total={LEVELS.length}
+        onComplete={() => setIsLevelTransitioning(false)}
+      />
       <header className="balloons-header">
         <div className="balloons-status">
           <img src={game.icon} alt="" />

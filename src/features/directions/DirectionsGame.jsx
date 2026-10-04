@@ -179,6 +179,7 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
   const [activeHintDirection, setActiveHintDirection] = useState(null)
   const [levelSolved, setLevelSolved] = useState(false)
   const [completed, setCompleted] = useState(false)
+  const [isLevelTransitioning, setIsLevelTransitioning] = useState(false)
   const nextLevelTimerRef = useRef(null)
   const idleHintTimerRef = useRef(null)
   const invalidNarrationTimerRef = useRef(null)
@@ -304,7 +305,7 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
   }, [])
 
   const playDirectionHint = useCallback(() => {
-    if (muted || levelSolved || completed || !nextPathDirection) return
+    if (muted || levelSolved || completed || isLevelTransitioning || !nextPathDirection) return
     const audio = directionHintSoundsRef.current[nextPathDirection]
     if (!audio) return
 
@@ -320,7 +321,7 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
       setActiveHintDirection(null)
       console.warn('No se pudo reproducir la pista de direcciones.')
     })
-  }, [completed, levelSolved, muted, nextPathDirection])
+  }, [completed, isLevelTransitioning, levelSolved, muted, nextPathDirection])
 
   useEffect(() => {
     if (muted || hasPlayedOpeningHintRef.current || !isPageActive()) return undefined
@@ -332,7 +333,7 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
   }, [muted, playDirectionHint])
 
   const playDirectionButtonAudio = useCallback((direction) => {
-    if (muted) return
+    if (muted || isLevelTransitioning) return
     const audio = directionButtonSoundsRef.current[direction]
     if (!audio) return
 
@@ -347,11 +348,11 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
       setIsSpeaking(false)
       console.warn('No se pudo reproducir el nombre de la dirección.')
     })
-  }, [muted])
+  }, [isLevelTransitioning, muted])
 
   const playInvalidMoveNarration = useCallback((reason) => {
     const audios = invalidMoveAudioRefs.current[reason] ?? []
-    if (muted || audios.length === 0) return
+    if (muted || isLevelTransitioning || audios.length === 0) return
 
     const previousIndex = lastInvalidMoveIndexRef.current[reason]
     const availableIndexes = audios
@@ -373,7 +374,7 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
       setIsSpeaking(false)
       console.warn('No se pudo reproducir el mensaje de movimiento inválido.')
     })
-  }, [muted])
+  }, [isLevelTransitioning, muted])
 
   const scheduleMovementAudio = useCallback((direction) => {
     const firstFrame = window.requestAnimationFrame(() => {
@@ -482,6 +483,12 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
         }
 
         const nextLevelIndex = levelIndex + 1
+        window.clearTimeout(invalidNarrationTimerRef.current)
+        activeNarrationAudioRef.current?.pause()
+        activeNarrationAudioRef.current = null
+        setIsSpeaking(false)
+        setActiveHintDirection(null)
+        setIsLevelTransitioning(true)
         setLevelIndex(nextLevelIndex)
         setPosition(LEVELS[nextLevelIndex].start)
         setFeedback(null)
@@ -514,7 +521,11 @@ function DirectionsGame({ game, muted, onToggleSound, onBack }) {
 
   return (
     <main className="directions-game">
-      <LevelTransition current={levelIndex + 1} total={TOTAL_LEVELS} />
+      <LevelTransition
+        current={levelIndex + 1}
+        total={TOTAL_LEVELS}
+        onComplete={() => setIsLevelTransitioning(false)}
+      />
       <header className="directions-header">
         <div className="directions-status">
           <img src={game.icon} alt="" />

@@ -104,6 +104,7 @@ function PatternsGame({ game, muted, onToggleSound, onBack }) {
   const [feedback, setFeedback] = useState(null)
   const [solved, setSolved] = useState(false)
   const [completed, setCompleted] = useState(false)
+  const [isLevelTransitioning, setIsLevelTransitioning] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [readingPatternIndex, setReadingPatternIndex] = useState(-1)
   const timerRef = useRef(null)
@@ -263,7 +264,7 @@ function PatternsGame({ game, muted, onToggleSound, onBack }) {
 
   useEffect(() => {
     if (autoReadLevelRef.current === levelIndex) return undefined
-    if (muted || completed || !isPageActive()) return undefined
+    if (muted || completed || isLevelTransitioning || !isPageActive()) return undefined
 
     let startTimer
     const activeAudio = activeNarrationAudioRef.current
@@ -287,7 +288,7 @@ function PatternsGame({ game, muted, onToggleSound, onBack }) {
       activeAudio?.removeEventListener('ended', beginReading)
       activeAudio?.removeEventListener('error', beginReading)
     }
-  }, [completed, levelIndex, muted, readPattern])
+  }, [completed, isLevelTransitioning, levelIndex, muted, readPattern])
 
   const restartIdleHintTimer = useCallback(() => {
     window.clearTimeout(idleHintTimerRef.current)
@@ -329,6 +330,8 @@ function PatternsGame({ game, muted, onToggleSound, onBack }) {
       setCompleted(true)
       return
     }
+    stopNarration()
+    setIsLevelTransitioning(true)
     setLevelIndex((current) => current + 1)
     setFeedback(null)
     setSolved(false)
@@ -365,7 +368,11 @@ function PatternsGame({ game, muted, onToggleSound, onBack }) {
 
   return (
     <main className="patterns-game">
-      <LevelTransition current={levelIndex + 1} total={LEVELS.length} />
+      <LevelTransition
+        current={levelIndex + 1}
+        total={LEVELS.length}
+        onComplete={() => setIsLevelTransitioning(false)}
+      />
       <header className="patterns-header">
         <div className="patterns-status">
           <img src={game.icon} alt="" />

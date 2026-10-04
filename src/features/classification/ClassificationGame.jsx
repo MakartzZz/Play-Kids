@@ -140,6 +140,7 @@ function ClassificationGame({ game, muted, onToggleSound, onBack }) {
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [activeBoxColor, setActiveBoxColor] = useState(null)
   const [completed, setCompleted] = useState(false)
+  const [isLevelTransitioning, setIsLevelTransitioning] = useState(false)
   const nextRoundTimerRef = useRef(null)
   const idleHintTimerRef = useRef(null)
   const errorNarrationTimerRef = useRef(null)
@@ -238,7 +239,7 @@ function ClassificationGame({ game, muted, onToggleSound, onBack }) {
   }, [muted])
 
   const playNarration = useCallback((audio, boxColor = null) => {
-    if (muted || !audio) return
+    if (muted || isLevelTransitioning || !audio) return
 
     if (activeNarrationRef.current && activeNarrationRef.current !== audio) {
       activeNarrationRef.current.pause()
@@ -252,7 +253,7 @@ function ClassificationGame({ game, muted, onToggleSound, onBack }) {
       setActiveBoxColor(null)
       console.warn('No se pudo reproducir una narración de clasificación.')
     })
-  }, [muted])
+  }, [isLevelTransitioning, muted])
 
   const playHint = useCallback(() => {
     playNarration(hintAudioRef.current)
@@ -357,6 +358,13 @@ function ClassificationGame({ game, muted, onToggleSound, onBack }) {
       return
     }
 
+    window.clearTimeout(errorNarrationTimerRef.current)
+    window.clearTimeout(correctNarrationTimerRef.current)
+    activeNarrationRef.current?.pause()
+    activeNarrationRef.current = null
+    setIsSpeaking(false)
+    setActiveBoxColor(null)
+    setIsLevelTransitioning(true)
     setRound((current) => current + 1)
     setPlacedIds([])
     setSelectedId(null)
@@ -468,7 +476,12 @@ function ClassificationGame({ game, muted, onToggleSound, onBack }) {
       onKeyDownCapture={restartIdleHintTimer}
       onPointerDownCapture={restartIdleHintTimer}
     >
-      <LevelTransition current={round} total={TOTAL_ROUNDS} label="Ronda" />
+      <LevelTransition
+        current={round}
+        total={TOTAL_ROUNDS}
+        label="Ronda"
+        onComplete={() => setIsLevelTransitioning(false)}
+      />
       <header className="classification-header">
         <div className="classification-status">
           <img src={game.icon} alt="" />

@@ -92,14 +92,15 @@ function EmotionsGame({ game, muted, onToggleSound, onBack }) {
   const [solved, setSolved] = useState(false)
   const [showHint, setShowHint] = useState(false)
   const [completed, setCompleted] = useState(false)
+  const [isLevelTransitioning, setIsLevelTransitioning] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
-  const timerRef = useRef(null)
   const idleStoryTimerRef = useRef(null)
   const feedbackNarrationTimerRef = useRef(null)
   const storyAudioRefs = useRef([])
   const emotionAudioRefs = useRef({})
   const errorAudioRef = useRef(null)
   const activeNarrationAudioRef = useRef(null)
+  const narrationCompleteRef = useRef(null)
   const autoPlayedLevelRef = useRef(null)
   const level = LEVELS[levelIndex]
 
@@ -112,6 +113,9 @@ function EmotionsGame({ game, muted, onToggleSound, onBack }) {
       if (activeNarrationAudioRef.current !== event.currentTarget) return
       activeNarrationAudioRef.current = null
       setIsSpeaking(false)
+      const onComplete = narrationCompleteRef.current
+      narrationCompleteRef.current = null
+      onComplete?.()
     }
     const createNarrationAudio = (source) => {
       const audio = getBufferedAudio(source)
@@ -133,7 +137,6 @@ function EmotionsGame({ game, muted, onToggleSound, onBack }) {
     errorAudioRef.current = errorAudio
 
     return () => {
-      window.clearTimeout(timerRef.current)
       window.clearTimeout(idleStoryTimerRef.current)
       window.clearTimeout(feedbackNarrationTimerRef.current)
       allAudios.forEach((audio) => {
@@ -146,6 +149,7 @@ function EmotionsGame({ game, muted, onToggleSound, onBack }) {
       emotionAudioRefs.current = {}
       errorAudioRef.current = null
       activeNarrationAudioRef.current = null
+      narrationCompleteRef.current = null
     }
   }, [])
 
@@ -165,27 +169,36 @@ function EmotionsGame({ game, muted, onToggleSound, onBack }) {
     window.clearTimeout(feedbackNarrationTimerRef.current)
     activeNarrationAudioRef.current?.pause()
     activeNarrationAudioRef.current = null
+    narrationCompleteRef.current = null
     setIsSpeaking(false)
   }, [])
 
-  const playNarration = useCallback((audio) => {
-    if (muted || !audio) return
+  const playNarration = useCallback((audio, onComplete) => {
+    if (muted || !audio) {
+      onComplete?.()
+      return
+    }
     stopNarration()
+    narrationCompleteRef.current = onComplete ?? null
     audio.currentTime = 0
     void audio.play().catch(() => {
       activeNarrationAudioRef.current = null
       setIsSpeaking(false)
+      const finish = narrationCompleteRef.current
+      narrationCompleteRef.current = null
+      finish?.()
       console.warn('No se pudo reproducir una narración de emociones.')
     })
   }, [muted, stopNarration])
 
   const playStory = useCallback(() => {
+    if (solved || isLevelTransitioning) return
     playNarration(storyAudioRefs.current[levelIndex])
-  }, [levelIndex, playNarration])
+  }, [isLevelTransitioning, levelIndex, playNarration, solved])
 
   useEffect(() => {
     if (autoPlayedLevelRef.current === levelIndex) return undefined
-    if (muted || completed || !isPageActive()) return undefined
+    if (muted || completed || isLevelTransitioning || !isPageActive()) return undefined
 
     let startTimer
     const activeAudio = activeNarrationAudioRef.current
@@ -209,7 +222,7 @@ function EmotionsGame({ game, muted, onToggleSound, onBack }) {
       activeAudio?.removeEventListener('ended', beginStory)
       activeAudio?.removeEventListener('error', beginStory)
     }
-  }, [completed, levelIndex, muted, playStory])
+  }, [completed, isLevelTransitioning, levelIndex, muted, playStory])
 
   useEffect(() => {
     if (solved || completed) return undefined
@@ -240,7 +253,7 @@ function EmotionsGame({ game, muted, onToggleSound, onBack }) {
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
-      suspendIdleStory()
+      window.clearTimeout(idleStoryTimerRef.current)
       window.removeEventListener('pointerdown', scheduleIdleStory, true)
       window.removeEventListener('keydown', scheduleIdleStory, true)
       window.removeEventListener('focus', scheduleIdleStory)
@@ -254,6 +267,8 @@ function EmotionsGame({ game, muted, onToggleSound, onBack }) {
       setCompleted(true)
       return
     }
+    stopNarration()
+    setIsLevelTransitioning(true)
     setLevelIndex((current) => current + 1)
     setFeedback(null)
     setSolved(false)
@@ -278,13 +293,11 @@ function EmotionsGame({ game, muted, onToggleSound, onBack }) {
     playCorrect()
     playLevelComplete()
     feedbackNarrationTimerRef.current = window.setTimeout(() => {
-      playNarration(emotionAudioRefs.current[emotion.id])
+      playNarration(emotionAudioRefs.current[emotion.id], advanceLevel)
     }, 450)
-    timerRef.current = window.setTimeout(advanceLevel, 1300)
   }
 
   const restart = () => {
-    window.clearTimeout(timerRef.current)
     stopNarration()
     setLevelIndex(0)
     setFeedback(null)
@@ -295,7 +308,11 @@ function EmotionsGame({ game, muted, onToggleSound, onBack }) {
 
   return (
     <main className="emotions-game">
-      <LevelTransition current={levelIndex + 1} total={LEVELS.length} />
+      <LevelTransition
+        current={levelIndex + 1}
+        total={LEVELS.length}
+        onComplete={() => setIsLevelTransitioning(false)}
+      />
       <header className="emotions-header">
         <div className="emotions-status">
           <img src={game.icon} alt="" />
@@ -311,8 +328,10 @@ function EmotionsGame({ game, muted, onToggleSound, onBack }) {
             type="button"
             className="round-button"
             onClick={() => {
+              const shouldAdvance = solved && !isLevelTransitioning
               stopNarration()
               onToggleSound()
+              if (shouldAdvance) advanceLevel()
             }}
             aria-label={muted ? 'Activar sonidos' : 'Silenciar sonidos'}
           >

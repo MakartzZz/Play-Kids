@@ -113,6 +113,7 @@ function NumbersGame({ game, muted, onToggleSound, onBack }) {
   const [feedback, setFeedback] = useState(null)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [completed, setCompleted] = useState(false)
+  const [isLevelTransitioning, setIsLevelTransitioning] = useState(false)
   const nextLevelTimerRef = useRef(null)
   const idleHintTimerRef = useRef(null)
   const correctNarrationTimerRef = useRef(null)
@@ -205,7 +206,7 @@ function NumbersGame({ game, muted, onToggleSound, onBack }) {
   }, [muted])
 
   const playNarration = useCallback((audio) => {
-    if (muted || !audio) return
+    if (muted || isLevelTransitioning || !audio) return
 
     if (activeNarrationAudioRef.current && activeNarrationAudioRef.current !== audio) {
       activeNarrationAudioRef.current.pause()
@@ -217,7 +218,7 @@ function NumbersGame({ game, muted, onToggleSound, onBack }) {
       setIsSpeaking(false)
       console.warn('No se pudo reproducir una narración de números.')
     })
-  }, [muted])
+  }, [isLevelTransitioning, muted])
 
   const playHint = useCallback(() => {
     if (completed) return
@@ -311,6 +312,12 @@ function NumbersGame({ game, muted, onToggleSound, onBack }) {
       setCompleted(true)
       return
     }
+    window.clearTimeout(correctNarrationTimerRef.current)
+    window.clearTimeout(errorNarrationTimerRef.current)
+    activeNarrationAudioRef.current?.pause()
+    activeNarrationAudioRef.current = null
+    setIsSpeaking(false)
+    setIsLevelTransitioning(true)
     setLevelIndex((current) => current + 1)
     setPlacedCounts([])
     setSelectedCount(null)
@@ -393,7 +400,11 @@ function NumbersGame({ game, muted, onToggleSound, onBack }) {
 
   return (
     <main className="numbers-game">
-      <LevelTransition current={levelIndex + 1} total={TOTAL_LEVELS} />
+      <LevelTransition
+        current={levelIndex + 1}
+        total={TOTAL_LEVELS}
+        onComplete={() => setIsLevelTransitioning(false)}
+      />
       <header className="numbers-header">
         <div className="numbers-status">
           <img src={game.icon} alt="" />

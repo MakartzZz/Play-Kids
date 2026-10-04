@@ -4,9 +4,14 @@ import './LevelTransition.css'
 
 const TRANSITION_DURATION = 1250
 
-function LevelTransition({ current, total, label = 'Nivel' }) {
+function LevelTransition({ current, total, label = 'Nivel', onComplete }) {
   const previousRef = useRef(current)
+  const onCompleteRef = useRef(onComplete)
   const [visibleLevel, setVisibleLevel] = useState(null)
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete
+  }, [onComplete])
 
   useEffect(() => {
     const previous = previousRef.current
@@ -18,7 +23,10 @@ function LevelTransition({ current, total, label = 'Nivel' }) {
     }
 
     setVisibleLevel(current)
-    const timer = window.setTimeout(() => setVisibleLevel(null), TRANSITION_DURATION)
+    const timer = window.setTimeout(() => {
+      setVisibleLevel(null)
+      onCompleteRef.current?.()
+    }, TRANSITION_DURATION)
     return () => window.clearTimeout(timer)
   }, [current])
 
