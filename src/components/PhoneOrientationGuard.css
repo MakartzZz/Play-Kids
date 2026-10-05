@@ -1,0 +1,163 @@
+.phone-orientation-guard {
+  position: fixed;
+  z-index: 10000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: max(22px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right)) max(22px, env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left));
+  color: #244c83;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255,255,255,.86), transparent 24%),
+    radial-gradient(circle at 82% 82%, rgba(255,224,113,.5), transparent 26%),
+    linear-gradient(145deg, #dff8ff, #bcecff 55%, #e4dbff);
+  text-align: center;
+  touch-action: none;
+}
+
+.phone-orientation-guard__content {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  width: min(88vw, 460px);
+}
+
+.phone-orientation-guard__animation {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(46vh, 250px);
+  aspect-ratio: 1;
+  transform: translateY(-12px);
+}
+
+.phone-orientation-guard__phone {
+  position: relative;
+  display: grid;
+  grid-template-rows: 15px 1fr 18px;
+  width: 104px;
+  height: 178px;
+  padding: 10px;
+  border: 7px solid #6148bb;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 12px 0 #473291, 0 20px 34px rgba(58,66,124,.24);
+  animation: phone-turn-upright 2.8s cubic-bezier(.55,.05,.25,1) infinite;
+  transform-origin: center;
+}
+
+.phone-orientation-guard__speaker,
+.phone-orientation-guard__home {
+  place-self: center;
+  display: block;
+  background: #c8bced;
+}
+
+.phone-orientation-guard__speaker {
+  width: 28px;
+  height: 5px;
+  border-radius: 99px;
+}
+
+.phone-orientation-guard__home {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.phone-orientation-guard__screen {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: 8px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: linear-gradient(#76d8f3 0 65%, #9ee27b 65%);
+}
+
+.phone-orientation-guard__screen i {
+  width: 18px;
+  height: 18px;
+  margin-bottom: 15px;
+  border-radius: 50% 50% 45% 45%;
+  background: #ffcf45;
+  box-shadow: 0 3px 0 #e39728;
+}
+
+.phone-orientation-guard__screen i:nth-child(2) { background: #ff7474; }
+.phone-orientation-guard__screen i:nth-child(3) { background: #8c6ce3; }
+
+.phone-orientation-guard h1 {
+  margin: 2px 0 0;
+  color: #49319a;
+  font-size: clamp(2rem, 8vh, 3rem);
+  line-height: 1;
+}
+
+.phone-orientation-guard p {
+  margin: 10px 0 0;
+  color: #3c6794;
+  font-size: clamp(1rem, 4.5vh, 1.35rem);
+  font-weight: 850;
+}
+
+.phone-orientation-guard__decor i {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.62);
+  animation: orientation-bubble 2.4s ease-in-out infinite alternate;
+}
+
+.phone-orientation-guard__decor i:nth-child(1) { top: 13%; left: 10%; }
+.phone-orientation-guard__decor i:nth-child(2) { top: 23%; right: 11%; width: 38px; height: 38px; animation-delay: -.8s; }
+.phone-orientation-guard__decor i:nth-child(3) { bottom: 14%; left: 19%; width: 33px; height: 33px; animation-delay: -1.3s; }
+.phone-orientation-guard__decor i:nth-child(4) { right: 18%; bottom: 10%; width: 18px; height: 18px; animation-delay: -.4s; }
+
+html.is-phone-orientation-blocked body {
+  overflow: hidden;
+}
+
+html.is-phone-orientation-blocked #root > *:not(.phone-orientation-guard),
+html.is-phone-orientation-blocked #root > *:not(.phone-orientation-guard) * {
+  animation-play-state: paused !important;
+}
+
+@keyframes phone-turn-upright {
+  0%, 15%, 100% {
+    opacity: 1;
+    transform: rotate(90deg) scale(.92);
+  }
+  50%, 67% {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+  75% {
+    opacity: 0;
+    transform: rotate(0deg) scale(.35);
+  }
+  76% {
+    opacity: 0;
+    transform: rotate(90deg) scale(.35);
+  }
+  88% {
+    opacity: 1;
+    transform: rotate(90deg) scale(1.04);
+  }
+}
+
+@keyframes orientation-bubble {
+  to { transform: translateY(-13px) scale(1.12); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phone-orientation-guard__phone {
+    animation: none;
+  }
+
+  .phone-orientation-guard__decor i {
+    animation: none;
+  }
+}

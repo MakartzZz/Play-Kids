@@ -3,6 +3,7 @@ import './App.css'
 import GameLobby from './components/GameLobby.jsx'
 import GamePlaceholder from './components/GamePlaceholder.jsx'
 import IntroScreen from './components/IntroScreen.jsx'
+import PhoneOrientationGuard from './components/PhoneOrientationGuard.jsx'
 import ResourceLoadingScreen from './components/ResourceLoadingScreen.jsx'
 import SettingsScreen from './components/SettingsScreen.jsx'
 import BalloonsGame from './features/balloons/BalloonsGame.jsx'
@@ -15,6 +16,7 @@ import { lobbyMedia } from './config/media.js'
 import useBackgroundMusic from './hooks/useBackgroundMusic.js'
 import useInterfaceSounds from './hooks/useInterfaceSounds.js'
 import useLobbyNarration from './hooks/useLobbyNarration.js'
+import usePhoneOrientationGuard from './hooks/usePhoneOrientationGuard.js'
 import { getAudioSettings, updateAudioSetting } from './utils/audioSettings.js'
 
 function App() {
@@ -28,6 +30,8 @@ function App() {
   const [installed, setInstalled] = useState(() => (
     window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
   ))
+  const { blocked: orientationBlocked, requestPortraitLock } = usePhoneOrientationGuard()
+  const effectiveMuted = muted || orientationBlocked
 
   useEffect(() => {
     const handleInstallPrompt = (event) => {
@@ -67,7 +71,7 @@ function App() {
   const isLobbyNarrationPlaying = useLobbyNarration({
     cueId: `${lobbyEntry.type}-${lobbyEntry.visit}`,
     source: narrationSource,
-    shouldPlay: screen === 'lobby' && !muted,
+    shouldPlay: screen === 'lobby' && !effectiveMuted,
     volume: lobbyMedia.narrationVolume,
   })
   const backgroundMusicVolume = isGameScreen
@@ -78,10 +82,21 @@ function App() {
 
   useBackgroundMusic(
     backgroundMusicSource,
-    (isLobbyScreen || isGameScreen) && !muted,
+    (isLobbyScreen || isGameScreen) && !effectiveMuted,
     backgroundMusicVolume,
   )
-  useInterfaceSounds(muted)
+  useInterfaceSounds(effectiveMuted)
+
+  const withOrientationGuard = (content) => (
+    <>
+      {content}
+      <PhoneOrientationGuard
+        active={orientationBlocked}
+        muted={muted}
+        onRequestPortrait={requestPortraitLock}
+      />
+    </>
+  )
 
   const openGame = (game) => {
     setSelectedGame(game)
@@ -105,102 +120,102 @@ function App() {
   }
 
   if (screen === 'intro') {
-    return <IntroScreen onComplete={() => setScreen('lobby')} />
+    return withOrientationGuard(<IntroScreen onComplete={() => setScreen('lobby')} />)
   }
 
   if (screen === 'game-loading' && selectedGame) {
-    return (
+    return withOrientationGuard(
       <ResourceLoadingScreen
         game={selectedGame}
-        muted={muted}
+        muted={effectiveMuted}
         onComplete={() => setScreen('game')}
-      />
+      />,
     )
   }
 
   if (screen === 'lobby-loading' && selectedGame) {
-    return (
+    return withOrientationGuard(
       <ResourceLoadingScreen
         destination="lobby"
         game={selectedGame}
-        muted={muted}
+        muted={effectiveMuted}
         onComplete={() => setScreen('lobby')}
-      />
+      />,
     )
   }
 
   if (screen === 'game' && selectedGame) {
     if (selectedGame.id === 'clasificacion') {
-      return (
+      return withOrientationGuard(
         <ClassificationGame
           game={selectedGame}
-          muted={muted}
+          muted={effectiveMuted}
           onToggleSound={() => setMuted((current) => !current)}
           onBack={returnToLobby}
-        />
+        />,
       )
     }
 
     if (selectedGame.id === 'direcciones') {
-      return (
+      return withOrientationGuard(
         <DirectionsGame
           game={selectedGame}
-          muted={muted}
+          muted={effectiveMuted}
           onToggleSound={() => setMuted((current) => !current)}
           onBack={returnToLobby}
-        />
+        />,
       )
     }
 
     if (selectedGame.id === 'numeros') {
-      return (
+      return withOrientationGuard(
         <NumbersGame
           game={selectedGame}
-          muted={muted}
+          muted={effectiveMuted}
           onToggleSound={() => setMuted((current) => !current)}
           onBack={returnToLobby}
-        />
+        />,
       )
     }
 
     if (selectedGame.id === 'patrones') {
-      return (
+      return withOrientationGuard(
         <PatternsGame
           game={selectedGame}
-          muted={muted}
+          muted={effectiveMuted}
           onToggleSound={() => setMuted((current) => !current)}
           onBack={returnToLobby}
-        />
+        />,
       )
     }
 
     if (selectedGame.id === 'emociones') {
-      return (
+      return withOrientationGuard(
         <EmotionsGame
           game={selectedGame}
-          muted={muted}
+          muted={effectiveMuted}
           onToggleSound={() => setMuted((current) => !current)}
           onBack={returnToLobby}
-        />
+        />,
       )
     }
 
     if (selectedGame.id === 'cuenta-explota') {
-      return (
+      return withOrientationGuard(
         <BalloonsGame
           game={selectedGame}
-          muted={muted}
+          muted={effectiveMuted}
           onToggleSound={() => setMuted((current) => !current)}
           onBack={returnToLobby}
-        />
+        />,
       )
     }
 
-    return <GamePlaceholder game={selectedGame} onBack={returnToLobby} />
+    return withOrientationGuard(<GamePlaceholder game={selectedGame} onBack={returnToLobby} />)
   }
 
   if (screen === 'settings') {
-    return (
+    return withOrientationGuard(
       <SettingsScreen
         audioSettings={audioSettings}
         installed={installed}
@@ -208,20 +223,20 @@ function App() {
         onAudioChange={changeAudioSetting}
         onBack={() => setScreen('lobby')}
         onInstall={installApp}
-      />
+      />,
     )
   }
 
-  return (
+  return withOrientationGuard(
     <GameLobby
       entryType={lobbyEntry.type}
       isNarrating={isLobbyNarrationPlaying}
-      muted={muted}
+      muted={effectiveMuted}
       onGuideNarrationChange={setIsGuideNarrationPlaying}
       onOpenSettings={() => setScreen('settings')}
       onToggleSound={() => setMuted((current) => !current)}
       onSelectGame={openGame}
-    />
+    />,
   )
 }
 
