@@ -127,6 +127,7 @@ function NumbersGame({ game, muted, onToggleSound, onBack }) {
   const lastCorrectNarrationIndexRef = useRef(null)
   const lastErrorNarrationIndexRef = useRef(null)
   const hasPlayedOpeningHintRef = useRef(false)
+  const suppressedClickRef = useRef(null)
 
   const groups = useMemo(() => shuffle(LEVEL_SPRITES[levelIndex].map((sprite, index) => ({
     count: index + 1,
@@ -374,18 +375,32 @@ function NumbersGame({ game, muted, onToggleSound, onBack }) {
 
   const handlePointerUp = (event, count) => {
     if (drag?.count !== count) return
+    const moved = drag.moved || Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 8
     const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-number-target]')
     if (target) {
+      suppressedClickRef.current = count
       placeGroup(count, Number(target.dataset.numberTarget))
-    } else if (!drag.moved) {
-      const willSelect = selectedCount !== count
-      setSelectedCount(willSelect ? count : null)
-      if (willSelect) {
-        const group = groups.find((item) => item.count === count)
-        if (group) playGroupName(group.sprite)
-      }
+    } else if (moved) {
+      suppressedClickRef.current = count
     }
     setDrag(null)
+    window.setTimeout(() => {
+      if (suppressedClickRef.current === count) suppressedClickRef.current = null
+    }, 0)
+  }
+
+  const handleGroupClick = (count) => {
+    if (suppressedClickRef.current === count) {
+      suppressedClickRef.current = null
+      return
+    }
+
+    const willSelect = selectedCount !== count
+    setSelectedCount(willSelect ? count : null)
+    if (willSelect) {
+      const group = groups.find((item) => item.count === count)
+      if (group) playGroupName(group.sprite)
+    }
   }
 
   const restart = () => {
@@ -476,7 +491,7 @@ function NumbersGame({ game, muted, onToggleSound, onBack }) {
         <div className="numbers-tray" aria-label="Grupos de objetos para contar">
           {groups.map((group) => {
             if (placedCounts.includes(group.count)) return null
-            const isDragging = drag?.count === group.count
+            const isDragging = drag?.count === group.count && drag.moved
             return (
               <button
                 type="button"
@@ -486,6 +501,7 @@ function NumbersGame({ game, muted, onToggleSound, onBack }) {
                 onPointerMove={(event) => handlePointerMove(event, group.count)}
                 onPointerUp={(event) => handlePointerUp(event, group.count)}
                 onPointerCancel={() => setDrag(null)}
+                onClick={() => handleGroupClick(group.count)}
                 style={isDragging ? { '--drag-x': `${drag.x}px`, '--drag-y': `${drag.y}px` } : undefined}
                 aria-label={`${group.count} ${group.name}${group.count === 1 ? '' : 's'}`}
                 aria-pressed={selectedCount === group.count}

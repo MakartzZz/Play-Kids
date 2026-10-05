@@ -169,7 +169,7 @@
   transition: transform 150ms ease;
 }
 
-.numbers-group.is-selected { transform: translateY(-7px) scale(1.04); outline: 4px solid #7c51df; }
+.numbers-group.is-selected { transform: translateY(-7px) scale(1.04); box-shadow: 0 0 0 4px #7c51df, 0 9px 14px rgba(89, 56, 30, .16); }
 .numbers-group.is-dragging { z-index: 50; pointer-events: none; transform: translate(var(--drag-x), var(--drag-y)) scale(1.08); box-shadow: none; transition: transform 40ms linear; }
 
 .number-objects {

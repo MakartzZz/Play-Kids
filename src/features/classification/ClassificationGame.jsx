@@ -154,6 +154,7 @@ function ClassificationGame({ game, muted, onToggleSound, onBack }) {
   const lastErrorNarrationIndexRef = useRef(null)
   const lastCorrectNarrationIndexRef = useRef(null)
   const hasPlayedOpeningHintRef = useRef(false)
+  const suppressedClickRef = useRef(null)
 
   const objects = useMemo(() => {
     const colors = shuffled(ROUND_COLORS[round - 1])
@@ -445,19 +446,33 @@ function ClassificationGame({ game, muted, onToggleSound, onBack }) {
   const handlePointerUp = (event, objectId) => {
     if (drag?.id !== objectId) return
 
+    const moved = drag.moved || Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 8
     const bin = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-color-bin]')
     if (bin) {
+      suppressedClickRef.current = objectId
       placeObject(objectId, bin.dataset.colorBin)
-    } else if (!drag.moved) {
-      const willSelect = selectedId !== objectId
-      setSelectedId(willSelect ? objectId : null)
-      if (willSelect) {
-        const object = objects.find((item) => item.id === objectId)
-        if (object) playObjectName(object.sprite)
-      }
+    } else if (moved) {
+      suppressedClickRef.current = objectId
     }
 
     setDrag(null)
+    window.setTimeout(() => {
+      if (suppressedClickRef.current === objectId) suppressedClickRef.current = null
+    }, 0)
+  }
+
+  const handleObjectClick = (objectId) => {
+    if (suppressedClickRef.current === objectId) {
+      suppressedClickRef.current = null
+      return
+    }
+
+    const willSelect = selectedId !== objectId
+    setSelectedId(willSelect ? objectId : null)
+    if (willSelect) {
+      const object = objects.find((item) => item.id === objectId)
+      if (object) playObjectName(object.sprite)
+    }
   }
 
   const restart = () => {
@@ -561,7 +576,7 @@ function ClassificationGame({ game, muted, onToggleSound, onBack }) {
         <div className="sorting-tray" aria-label="Figuras para clasificar">
           {objects.map((object) => {
             if (placedIds.includes(object.id)) return null
-            const isDragging = drag?.id === object.id
+            const isDragging = drag?.id === object.id && drag.moved
             return (
               <button
                 type="button"
@@ -571,6 +586,7 @@ function ClassificationGame({ game, muted, onToggleSound, onBack }) {
                 onPointerMove={(event) => handlePointerMove(event, object.id)}
                 onPointerUp={(event) => handlePointerUp(event, object.id)}
                 onPointerCancel={() => setDrag(null)}
+                onClick={() => handleObjectClick(object.id)}
                 style={isDragging ? {
                   '--drag-x': `${drag.x}px`,
                   '--drag-y': `${drag.y}px`,

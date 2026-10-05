@@ -274,6 +274,8 @@
 
 .sorting-object.is-selected {
   transform: translateY(-8px) scale(1.08);
+  background: rgba(244, 238, 255, .92);
+  box-shadow: 0 0 0 4px #7c51df, 0 9px 15px rgba(82, 51, 150, .2);
 }
 
 .sorting-object.is-selected .sorting-sprite {
@@ -304,8 +306,6 @@
   background-repeat: no-repeat;
   background-size: 400% 400%;
   background-position: var(--sprite-x) var(--sprite-y);
-  transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
 .sorting-sprite--apple { --sprite-x: 0%; --sprite-y: 0%; }
