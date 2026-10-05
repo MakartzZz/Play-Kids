@@ -47,6 +47,19 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    const updatePageActivity = () => {
+      document.documentElement.classList.toggle('is-page-inactive', document.hidden)
+    }
+
+    updatePageActivity()
+    document.addEventListener('visibilitychange', updatePageActivity)
+    return () => {
+      document.removeEventListener('visibilitychange', updatePageActivity)
+      document.documentElement.classList.remove('is-page-inactive')
+    }
+  }, [])
+
   const narrationSource = lobbyMedia.narrationByEntry[lobbyEntry.type]
   const isLobbyScreen = screen === 'lobby' || screen === 'settings'
   const isGameScreen = screen === 'game' && Boolean(selectedGame)

@@ -24,6 +24,65 @@ const COMMON_GAME_SOUNDS = new Set([
   'sounds/level-complete.mp3',
 ])
 
+const isSmallScreen = () => window.matchMedia('(max-width: 719px)').matches
+const isPortraitScreen = () => window.matchMedia('(orientation: portrait)').matches
+const isCoarsePointer = () => window.matchMedia('(pointer: coarse)').matches
+
+const shouldPreloadBackground = (path) => {
+  const small = isSmallScreen()
+  const portrait = isPortraitScreen()
+
+  if (path.startsWith('backgrounds/lobby-')) {
+    const selected = small
+      ? 'backgrounds/lobby-mobile.webp'
+      : portrait
+        ? 'backgrounds/lobby-tablet-portrait.webp'
+        : 'backgrounds/lobby-tablet.webp'
+    return path === selected
+  }
+
+  if (path.startsWith('backgrounds/classification-')) {
+    return path === (small
+      ? 'backgrounds/classification-mobile.webp'
+      : 'backgrounds/classification-tablet.webp')
+  }
+
+  if (path.startsWith('backgrounds/directions-')) {
+    const isLargeTablet = window.matchMedia('(min-width: 1300px) and (min-height: 900px) and (orientation: landscape) and (pointer: coarse)').matches
+    const selected = small
+      ? 'backgrounds/directions-mobile.webp'
+      : isLargeTablet
+        ? 'backgrounds/directions-ipad-pro.webp'
+        : portrait
+          ? 'backgrounds/directions-tablet-portrait.webp'
+          : 'backgrounds/directions-tablet.webp'
+    return path === selected
+  }
+
+  if (path.startsWith('backgrounds/patterns-')) {
+    const selected = small
+      ? 'backgrounds/patterns-mobile.webp'
+      : portrait
+        ? 'backgrounds/patterns-tablet-portrait.webp'
+        : isCoarsePointer()
+          ? 'backgrounds/patterns-tablet.webp'
+          : 'backgrounds/patterns-desktop.webp'
+    return path === selected
+  }
+
+  if (path.startsWith('backgrounds/balloons-')) {
+    return path === (small
+      ? 'backgrounds/balloons-portrait.webp'
+      : 'backgrounds/balloons-landscape.webp')
+  }
+
+  return true
+}
+
+const filterResourcesForDevice = (resources) => resources.filter(({ path, type }) => (
+  type !== 'image' || shouldPreloadBackground(path)
+))
+
 const isLobbyAsset = (path) => (
   path.startsWith('backgrounds/lobby-')
   || path.startsWith('branding/')
@@ -103,29 +162,26 @@ const preloadImage = (source) => new Promise((resolve) => {
   image.src = source
 })
 
-const preloadAudio = async (source) => {
+const preloadAudio = async (source, path) => {
+  const isStreamingMusic = path === 'sounds/lobby-background.mp3' || path.endsWith('/music.mp3')
   try {
-    const response = await fetch(source, { cache: 'force-cache' })
-    if (!response.ok) throw new Error(`No se pudo cargar el audio: ${response.status}`)
-    await response.arrayBuffer()
+    await prepareBufferedAudio(source, { native: isStreamingMusic })
   } catch {
-    // The media element still gets a chance to prepare the file directly.
+    // Un sonido opcional no debe dejar bloqueada la pantalla de carga.
   }
-
-  await prepareBufferedAudio(source)
 }
 
-const preloadResource = async ({ source, type }) => {
+const preloadResource = async ({ source, type, path }) => {
   if (loadedSources.has(source)) return
 
-  if (type === 'audio') await preloadAudio(source)
+  if (type === 'audio') await preloadAudio(source, path)
   else await preloadImage(source)
 
   loadedSources.add(source)
 }
 
-export const getLobbyResources = () => ASSETS.filter(({ path }) => isLobbyAsset(path))
-export const getGameResources = (gameId) => ASSETS.filter(({ path }) => isGameAsset(path, gameId))
+export const getLobbyResources = () => filterResourcesForDevice(ASSETS.filter(({ path }) => isLobbyAsset(path)))
+export const getGameResources = (gameId) => filterResourcesForDevice(ASSETS.filter(({ path }) => isGameAsset(path, gameId)))
 
 export const releaseResources = (resources) => {
   const uniqueResources = [...new Map(resources.map((resource) => [resource.source, resource])).values()]
@@ -151,6 +207,7 @@ export const preloadResources = async (resources, onProgress = () => {}) => {
     }
   }
 
-  await Promise.all(Array.from({ length: Math.min(6, queue.length) }, worker))
+  const concurrency = isCoarsePointer() || isSmallScreen() ? 3 : 6
+  await Promise.all(Array.from({ length: Math.min(concurrency, queue.length) }, worker))
   onProgress(100)
 }

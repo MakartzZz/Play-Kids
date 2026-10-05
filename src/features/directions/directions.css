@@ -239,7 +239,6 @@
 .directions-position--rabbit {
   z-index: 5;
   transition: translate 220ms cubic-bezier(.2, .8, .25, 1);
-  will-change: translate, transform, opacity;
 }
 
 .directions-position--rabbit.is-entering-burrow {
@@ -258,7 +257,6 @@
   position: relative;
   width: 90%;
   animation: directions-rabbit-idle 1.8s ease-in-out infinite;
-  will-change: transform;
 }
 
 .direction-sprite--rabbit > img {

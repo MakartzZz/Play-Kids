@@ -19,7 +19,7 @@ function useBackgroundMusic(source, shouldPlay, volume = 0.18) {
 
   useEffect(() => {
     shouldPlayRef.current = shouldPlay
-    const audio = shouldPlay ? getBufferedAudio(source) : audioRef.current
+    const audio = shouldPlay ? getBufferedAudio(source, { native: true }) : audioRef.current
     if (!audio) return undefined
 
     if (shouldPlay) {

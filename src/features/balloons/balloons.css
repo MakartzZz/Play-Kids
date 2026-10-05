@@ -78,7 +78,6 @@
   padding: 0;
   background: transparent;
   animation: balloon-rise var(--balloon-duration) linear var(--balloon-delay) forwards;
-  will-change: transform;
 }
 
 .balloon-button .balloon-image { width: 100%; }

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { BackIcon, DownloadIcon, EffectsIcon, MusicIcon, VoiceIcon, VolumeLevelsIcon } from './UiIcons.jsx'
 import voicePreview from '../assets/sounds/classification/objects/apple.mp3'
 import effectPreview from '../assets/sounds/correct.mp3'
-import { getBufferedAudio, rewindBufferedAudio } from '../utils/audioPool.js'
+import { getBufferedAudio, releaseBufferedAudio, rewindBufferedAudio } from '../utils/audioPool.js'
 import { isAppleVolumeRestricted, setAudioVolume } from '../utils/audioSettings.js'
 
 const CHANNELS = [
@@ -17,7 +17,7 @@ const isIOS = () => {
 }
 
 function SettingsScreen({ audioSettings, installed, installAvailable, onAudioChange, onBack, onInstall }) {
-  const volumeRestricted = isAppleVolumeRestricted()
+  const musicVolumeRestricted = isAppleVolumeRestricted()
   const previewAudioRef = useRef(null)
 
   const playPreview = (channel) => {
@@ -29,7 +29,11 @@ function SettingsScreen({ audioSettings, installed, installAvailable, onAudioCha
     void audio.play().catch(() => {})
   }
 
-  useEffect(() => () => previewAudioRef.current?.pause(), [])
+  useEffect(() => () => {
+    previewAudioRef.current?.pause()
+    releaseBufferedAudio(voicePreview)
+    releaseBufferedAudio(effectPreview)
+  }, [])
 
   return (
     <main className="settings-screen">
@@ -56,18 +60,13 @@ function SettingsScreen({ audioSettings, installed, installAvailable, onAudioCha
             </div>
           </div>
 
-          {volumeRestricted ? (
-            <div className="settings-apple-note">
-              <strong>El volumen se controla desde el dispositivo</strong>
-              <p>En iPhone y iPad, usa los botones de volumen para elegir qué tan fuerte se escucha el juego.</p>
-            </div>
-          ) : (
-            <div className="settings-volume-list">
+          <div className="settings-volume-list">
               {CHANNELS.map((channel) => {
                 const percent = Math.round(audioSettings[channel.id] * 100)
                 const ChannelIcon = channel.Icon
+                const deviceControlled = channel.id === 'music' && musicVolumeRestricted
                 return (
-                  <div className="settings-volume" key={channel.id}>
+                  <div className={`settings-volume${deviceControlled ? ' settings-volume--device' : ''}`} key={channel.id}>
                     <span className="settings-volume__icon" aria-hidden="true"><ChannelIcon /></span>
                     <span className="settings-volume__copy">
                       <strong>{channel.title}</strong>
@@ -80,11 +79,12 @@ function SettingsScreen({ audioSettings, installed, installAvailable, onAudioCha
                         max="100"
                         step="5"
                         value={percent}
+                        disabled={deviceControlled}
                         style={{ '--volume-progress': `${percent}%` }}
                         onChange={(event) => onAudioChange(channel.id, Number(event.target.value) / 100)}
                         aria-label={`Volumen de ${channel.title.toLowerCase()}`}
                       />
-                      <output>{percent}%</output>
+                      <output>{deviceControlled ? 'Dispositivo' : `${percent}%`}</output>
                       {channel.preview && (
                         <button
                           type="button"
@@ -99,6 +99,11 @@ function SettingsScreen({ audioSettings, installed, installAvailable, onAudioCha
                   </div>
                 )
               })}
+            </div>
+          {musicVolumeRestricted && (
+            <div className="settings-apple-note">
+              <strong>La música usa el volumen del dispositivo</strong>
+              <p>Las voces y los sonidos sí se pueden ajustar aquí. Para la música, usa los botones de volumen del iPhone o iPad.</p>
             </div>
           )}
         </article>

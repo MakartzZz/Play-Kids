@@ -1,18 +1,25 @@
-import { setAudioVolume } from './audioSettings.js'
+import { setAudioVolume, untrackAudio } from './audioSettings.js'
+import { prepareWebAudio, releaseWebAudio, supportsWebAudio, WebAudioClip } from './webAudioEngine.js'
 
-const audioPool = new Map()
-const audioPreparationPool = new Map()
+const webAudioPool = new Map()
+const nativeAudioPool = new Map()
+const nativePreparationPool = new Map()
 
-export const getBufferedAudio = (source) => {
+export const getBufferedAudio = (source, { native = false } = {}) => {
   if (!source) return null
 
-  if (!audioPool.has(source)) {
-    const audio = new Audio(source)
-    audio.preload = 'auto'
-    audioPool.set(source, audio)
+  if (!native && supportsWebAudio()) {
+    if (!webAudioPool.has(source)) webAudioPool.set(source, new WebAudioClip(source))
+    return webAudioPool.get(source)
   }
 
-  return audioPool.get(source)
+  if (!nativeAudioPool.has(source)) {
+    const audio = new Audio(source)
+    audio.preload = 'auto'
+    nativeAudioPool.set(source, audio)
+  }
+
+  return nativeAudioPool.get(source)
 }
 
 export const configureBufferedAudio = (audio, { loop, volume, channel = 'effects' }) => {
@@ -28,25 +35,32 @@ export const rewindBufferedAudio = (audio) => {
 }
 
 export const releaseBufferedAudio = (source) => {
-  const audio = audioPool.get(source)
-  if (!audio) {
-    audioPreparationPool.delete(source)
-    return
+  const clip = webAudioPool.get(source)
+  if (clip) {
+    clip.release()
+    webAudioPool.delete(source)
   }
 
-  audio.pause()
-  audio.removeAttribute('src')
-  audio.load()
-  audioPool.delete(source)
-  audioPreparationPool.delete(source)
+  const audio = nativeAudioPool.get(source)
+  if (audio) {
+    audio.pause()
+    untrackAudio(audio)
+    audio.removeAttribute('src')
+    audio.load()
+    nativeAudioPool.delete(source)
+  }
+
+  nativePreparationPool.delete(source)
+  releaseWebAudio(source)
 }
 
-export const prepareBufferedAudio = (source) => {
+export const prepareBufferedAudio = (source, { native = false } = {}) => {
   if (!source) return Promise.resolve()
-  if (audioPreparationPool.has(source)) return audioPreparationPool.get(source)
+  if (!native && supportsWebAudio()) return prepareWebAudio(source)
+  if (nativePreparationPool.has(source)) return nativePreparationPool.get(source)
 
   const preparation = new Promise((resolve) => {
-    const audio = getBufferedAudio(source)
+    const audio = getBufferedAudio(source, { native: true })
     let finished = false
 
     const finish = () => {
@@ -72,6 +86,6 @@ export const prepareBufferedAudio = (source) => {
     audio.load()
   })
 
-  audioPreparationPool.set(source, preparation)
+  nativePreparationPool.set(source, preparation)
   return preparation
 }

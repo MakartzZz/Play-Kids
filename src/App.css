@@ -758,6 +758,20 @@
   box-shadow: 0 2px 0 #5138aa;
 }
 
+.settings-volume--device input[type='range'] {
+  opacity: .48;
+}
+
+.settings-volume--device output {
+  min-width: 72px;
+  color: #71839b;
+  font-size: .72rem;
+}
+
+.settings-volume--device .settings-volume__controls {
+  grid-template-columns: minmax(110px, 1fr) minmax(72px, auto) auto;
+}
+
 .settings-apple-note {
   padding: 18px;
   border-radius: 20px;
@@ -989,7 +1003,6 @@
   transform: translateZ(0) scale(1.14);
   transition: opacity 55ms linear;
   backface-visibility: hidden;
-  will-change: opacity;
 }
 
 .lobby-mascot__frame--base {
@@ -1590,4 +1603,36 @@
 @keyframes card-guide-glow {
   0%, 100% { opacity: .42; }
   50% { opacity: 1; }
+}
+
+/* Perfil ligero: evita capas de composición costosas en teléfonos y tabletas. */
+@media (pointer: coarse), (max-width: 719px) {
+  .settings-card,
+  .lobby-welcome,
+  .classification-complete,
+  .directions-complete,
+  .numbers-complete,
+  .patterns-complete,
+  .emotions-complete,
+  .balloons-complete {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .game-card,
+  .game-card:hover,
+  .game-card:active {
+    box-shadow: 0 6px 0 color-mix(in srgb, var(--card-accent) 58%, #9a7136);
+  }
+
+  .settings-card,
+  .lobby-welcome {
+    box-shadow: 0 8px 18px rgba(43, 96, 140, .13);
+  }
+}
+
+html.is-page-inactive *,
+html.is-page-inactive *::before,
+html.is-page-inactive *::after {
+  animation-play-state: paused !important;
 }

@@ -1,3 +1,5 @@
+import { setWebAudioChannelVolume } from './webAudioEngine.js'
+
 const STORAGE_KEY = 'playkids-audio-settings'
 
 export const DEFAULT_AUDIO_SETTINGS = {
@@ -6,7 +8,7 @@ export const DEFAULT_AUDIO_SETTINGS = {
   music: 1,
 }
 
-const trackedAudio = new Map()
+const trackedNativeAudio = new Map()
 
 const clampVolume = (value) => Math.min(1, Math.max(0, Number(value) || 0))
 
@@ -30,6 +32,13 @@ let currentSettings = readStoredSettings()
 
 const applyVolume = (audio, channel, baseVolume) => {
   if (!audio) return
+
+  if (audio.__playKidsWebAudioClip) {
+    audio.setAudioChannel(channel)
+    audio.volume = clampVolume(baseVolume)
+    return
+  }
+
   const volume = clampVolume(baseVolume) * (currentSettings[channel] ?? 1)
 
   try {
@@ -52,7 +61,9 @@ export const updateAudioSetting = (channel, value) => {
     // Los ajustes continúan activos durante la sesión aunque no haya almacenamiento.
   }
 
-  trackedAudio.forEach(({ channel: audioChannel, baseVolume }, audio) => {
+  setWebAudioChannelVolume(channel, currentSettings[channel])
+
+  trackedNativeAudio.forEach(({ channel: audioChannel, baseVolume }, audio) => {
     applyVolume(audio, audioChannel, baseVolume)
   })
 
@@ -61,9 +72,19 @@ export const updateAudioSetting = (channel, value) => {
 
 export const setAudioVolume = (audio, channel, baseVolume, track = true) => {
   if (!audio) return
-  if (track) trackedAudio.set(audio, { channel, baseVolume: clampVolume(baseVolume) })
+  if (track && !audio.__playKidsWebAudioClip) {
+    trackedNativeAudio.set(audio, { channel, baseVolume: clampVolume(baseVolume) })
+  }
   applyVolume(audio, channel, baseVolume)
 }
+
+export const untrackAudio = (audio) => {
+  if (!audio) return
+  trackedNativeAudio.delete(audio)
+}
+
+setWebAudioChannelVolume('voices', currentSettings.voices)
+setWebAudioChannelVolume('effects', currentSettings.effects)
 
 export const isAppleVolumeRestricted = () => {
   if (typeof navigator === 'undefined') return false

@@ -4,7 +4,7 @@ import LevelTransition from '../../components/LevelTransition.jsx'
 import LobbyMascot from '../../components/LobbyMascot.jsx'
 import { HintIcon, HomeIcon, RestartIcon, SoundIcon } from '../../components/UiIcons.jsx'
 import { setAudioVolume } from '../../utils/audioSettings.js'
-import { getBufferedAudio, rewindBufferedAudio } from '../../utils/audioPool.js'
+import { getBufferedAudio, releaseBufferedAudio, rewindBufferedAudio } from '../../utils/audioPool.js'
 import { playLevelComplete } from '../../hooks/useInterfaceSounds.js'
 import balloonSprites from '../../assets/balloons/balloon-sprites.webp'
 import {
@@ -179,8 +179,7 @@ function BalloonsGame({ game, muted, onToggleSound, onBack }) {
 
   useEffect(() => {
     const createAudio = (source) => {
-      const audio = new Audio(source)
-      audio.preload = 'auto'
+      const audio = getBufferedAudio(source)
       setAudioVolume(audio, 'voices', 0.9)
       audio.load()
       return audio
@@ -205,6 +204,15 @@ function BalloonsGame({ game, muted, onToggleSound, onBack }) {
     return () => {
       activeNarrationCleanupRef.current?.()
       allAudios.forEach((audio) => audio.pause())
+      const narrationSources = [
+        ...balloonPromptAudios,
+        ...Object.values(balloonCountAudios),
+        balloonHintAudio,
+        ...balloonErrorAudios,
+        ...balloonCompleteAudios,
+        balloonGameCompleteAudio,
+      ]
+      narrationSources.forEach(releaseBufferedAudio)
       activeNarrationRef.current = null
       activeNarrationCleanupRef.current = null
     }
@@ -231,6 +239,7 @@ function BalloonsGame({ game, muted, onToggleSound, onBack }) {
   useEffect(() => {
     if (phase !== 'playing' || isLevelTransitioning) return undefined
     const spawnTimer = window.setInterval(() => {
+      if (document.hidden) return
       setBalloons((current) => current.length >= 7 ? current : [...current, createBalloon(level)])
     }, 850)
     return () => window.clearInterval(spawnTimer)
@@ -240,6 +249,7 @@ function BalloonsGame({ game, muted, onToggleSound, onBack }) {
     window.clearTimeout(promptTimerRef.current)
     if (phase !== 'playing' || isLevelTransitioning) return undefined
     promptTimerRef.current = window.setTimeout(() => {
+      if (document.hidden) return
       playNarration(promptAudioRefs.current[levelIndex])
     }, 320)
     return () => window.clearTimeout(promptTimerRef.current)
@@ -247,13 +257,19 @@ function BalloonsGame({ game, muted, onToggleSound, onBack }) {
 
   useEffect(() => {
     const restart = () => restartHintTimer()
+    const handleVisibilityChange = () => {
+      window.clearTimeout(hintTimerRef.current)
+      if (!document.hidden) restartHintTimer()
+    }
     restartHintTimer()
     window.addEventListener('pointerdown', restart, true)
     window.addEventListener('keydown', restart, true)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => {
       window.clearTimeout(hintTimerRef.current)
       window.removeEventListener('pointerdown', restart, true)
       window.removeEventListener('keydown', restart, true)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [restartHintTimer])
 
