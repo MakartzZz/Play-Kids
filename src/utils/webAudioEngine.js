@@ -1,4 +1,5 @@
 const MAX_BUFFER_COUNT = 48
+const AUDIO_RESUME_TIMEOUT = 500
 const CHANNEL_NAMES = ['voices', 'effects']
 
 const bufferCache = new Map()
@@ -51,10 +52,26 @@ const createContext = () => {
   return audioContext
 }
 
-export const resumeWebAudio = () => {
+export const resumeWebAudio = async () => {
   const context = createContext()
-  if (!context || context.state === 'running') return Promise.resolve()
-  return context.resume().catch(() => {})
+  if (!context) return false
+  if (context.state === 'running') return true
+
+  let timeoutId = null
+  try {
+    await Promise.race([
+      context.resume(),
+      new Promise((resolve) => {
+        timeoutId = window.setTimeout(resolve, AUDIO_RESUME_TIMEOUT)
+      }),
+    ])
+  } catch {
+    // El navegador puede rechazar el desbloqueo hasta recibir una interacción.
+  } finally {
+    if (timeoutId !== null) window.clearTimeout(timeoutId)
+  }
+
+  return context.state === 'running'
 }
 
 export const suspendWebAudio = () => {
@@ -108,7 +125,12 @@ export const playWebAudio = async ({ source, channel, volume, playbackRate, loop
   if (!context) throw new Error('Web Audio no está disponible.')
 
   const buffer = await prepareWebAudio(source)
-  await resumeWebAudio()
+  const audioReady = await resumeWebAudio()
+  if (!audioReady) {
+    const error = new Error('El audio necesita una interacción del usuario.')
+    error.name = 'NotAllowedError'
+    throw error
+  }
   if (document.hidden) throw new Error('La página no está activa.')
 
   const sourceNode = context.createBufferSource()
